@@ -201,30 +201,18 @@
                   color="#5c4a00" rotation="-10  45 -10"></a-cylinder>
 
       <!-- BONUS: Burner glow — pure A-Frame animation, no external deps -->
-      <!-- Inner flame core: pulses scale 0.8→1.3 and opacity 0.6→1.0 on loop -->
+      <!-- BONUS: Burner glow (static — animations stripped to avoid anime.js crash) -->
       <a-sphere id="balloon-burner"
                 position="0 -0.28 0"
                 radius="0.15"
                 material="color: #ff6600; emissive: #ff4400; emissiveIntensity: 1.0;
-                          opacity: 0.85; transparent: true; shader: flat"
-                animation__scale="property: scale;
-                                  from: 0.8 0.8 0.8; to: 1.3 1.3 1.3;
-                                  dur: 400; dir: alternate; loop: true;
-                                  easing: easeInOutSine"
-                animation__opacity="property: material.opacity;
-                                    from: 0.6; to: 1.0;
-                                    dur: 600; dir: alternate; loop: true;
-                                    easing: easeInOutSine">
+                          opacity: 0.85; transparent: true; shader: flat">
       </a-sphere>
-      <!-- Outer halo: larger, more transparent, slower pulse for soft glow rim -->
+      <!-- Outer halo: soft glow rim -->
       <a-sphere position="0 -0.28 0"
                 radius="0.28"
                 material="color: #ff9900; emissive: #ff6600; emissiveIntensity: 0.6;
-                          opacity: 0.25; transparent: true; shader: flat"
-                animation__scale="property: scale;
-                                  from: 0.9 0.9 0.9; to: 1.2 1.2 1.2;
-                                  dur: 700; dir: alternate; loop: true;
-                                  easing: easeInOutSine">
+                          opacity: 0.25; transparent: true; shader: flat">
       </a-sphere>
     </a-entity>
 
@@ -256,15 +244,6 @@
                   fuse="true"
                   fuse-timeout="1500"
                   raycaster="objects: .menu-btn; far: 5"
-                  animation__fusing="property: scale; startEvents: fusing;
-                                     easing: easeInQuad; dur: 1500;
-                                     from: 1 1 1; to: 0.15 0.15 0.15"
-                  animation__click="property: scale; startEvents: click;
-                                    easing: easeOutBounce; dur: 200;
-                                    from: 0.15 0.15 0.15; to: 1 1 1"
-                  animation__mouseleave="property: scale; startEvents: mouseleave;
-                                         easing: easeOutQuad; dur: 300;
-                                         to: 1 1 1"
                   color="#FFD700"
                   opacity="0.9"
                   radius="0.012"
@@ -1138,21 +1117,31 @@ function wireButtons() {
 /* ================================================================
    BOOT
 ================================================================ */
-sceneEl.addEventListener('loaded', () => {
-  // Attach game-tick to scene
-  sceneEl.setAttribute('game-tick', '');
+function boot() {
+  if (boot.done) return;   // idempotent — whichever path fires first wins
+  boot.done = true;
 
-  // Wire up menu buttons
+  sceneEl.setAttribute('game-tick', '');
   wireButtons();
 
-  // Dismiss HTML loading overlay
   const loadDiv = document.getElementById('loading-screen');
   loadDiv.classList.add('fade-out');
   setTimeout(() => loadDiv.style.display = 'none', 700);
 
-  // Kick off flash screen
   startFlash();
-});
+}
+
+sceneEl.addEventListener('loaded', boot);
+
+// Fallback: if the 'loaded' event never fires (anime.js crash, asset timeout,
+// or any other init failure), force-boot after 5 s so the game is never
+// permanently stuck on a black screen.
+setTimeout(() => {
+  if (!boot.done) {
+    console.warn('Sky Drifter: a-scene "loaded" event did not fire within 5 s — forcing boot.');
+    boot();
+  }
+}, 5000);
 
 /* ================================================================
    MOBILE: unlock audio on first touch (browsers require a gesture)
