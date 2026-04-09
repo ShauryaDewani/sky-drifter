@@ -230,7 +230,7 @@
     <a-entity id="camera-rig" position="0 5 0">
 
       <a-camera id="camera"
-                look-controls="enabled: true; pointerLockEnabled: false; reverseMouseDrag: false"
+                look-controls="enabled: true; pointerLockEnabled: true; reverseMouseDrag: false"
                 wasd-controls="enabled: false"
                 fov="80"
                 near="0.1" far="1200">
@@ -251,158 +251,8 @@
         </a-cursor>
 
         <!-- ════════════════════════════════════════════════════
-             ① FLASH SCREEN  (auto-advances after 5 s)
-        ════════════════════════════════════════════════════ -->
-        <a-entity id="screen-flash" position="0 0 -2.6">
-
-          <!-- Background panel -->
-          <a-plane width="3.6" height="2.3"
-                   material="shader: flat; color: #000818; opacity: 0.97; transparent: true">
-          </a-plane>
-
-          <!-- Game title -->
-          <a-text value="SKY DRIFTER"
-                  position="0 0.75 0.02"
-                  align="center" color="#FFD700"
-                  width="4.2" font="kelsonsans">
-          </a-text>
-
-          <!-- Gold rule under title -->
-          <a-plane position="0 0.55 0.02" width="2.9" height="0.007"
-                   material="shader: flat; color: #FFD700; opacity: 0.8">
-          </a-plane>
-
-          <!-- Course / institution -->
-          <a-text value="CMPT 461 — Mobile VR"
-                  position="0 0.37 0.02"
-                  align="center" color="#aaddff" width="3.0">
-          </a-text>
-          <a-text value="Trinity Western University"
-                  position="0 0.19 0.02"
-                  align="center" color="#aaddff" width="3.0">
-          </a-text>
-
-          <!-- Student name  ← CHANGE THIS -->
-          <a-text value="Shaurya Dewani"
-                  position="0 -0.04 0.02"
-                  align="center" color="#ffffff" width="3.4" font="kelsonsans">
-          </a-text>
-
-          <!-- Student ID  ← CHANGE THIS -->
-          <a-text value="Student #: 301XXXXXX"
-                  position="0 -0.26 0.02"
-                  align="center" color="#888" width="2.6">
-          </a-text>
-
-          <!-- Countdown -->
-          <a-text id="flash-countdown"
-                  value="Continuing in 5…"
-                  position="0 -0.72 0.02"
-                  align="center" color="#FFD700" width="2.8">
-          </a-text>
-        </a-entity>
-
-        <!-- ════════════════════════════════════════════════════
-             ② SETUP SCREEN
-        ════════════════════════════════════════════════════ -->
-        <a-entity id="screen-setup" visible="false" position="0 0 -2.6">
-
-          <!-- Panel background -->
-          <a-plane width="3.6" height="3.0"
-                   material="shader: flat; color: #000818; opacity: 0.97; transparent: true">
-          </a-plane>
-
-          <!-- Title -->
-          <a-text value="SETTINGS"
-                  position="0 1.12 0.02"
-                  align="center" color="#FFD700" width="3.2" font="kelsonsans">
-          </a-text>
-
-          <!-- ── Music toggle ── -->
-          <a-text value="MUSIC"
-                  position="0 0.78 0.02"
-                  align="center" color="#aaddff" width="2.0">
-          </a-text>
-          <!-- Button plane — must have class="menu-btn" for raycaster -->
-          <a-plane id="btn-mute"
-                   class="menu-btn"
-                   position="0 0.50 0.02"
-                   width="1.9" height="0.40"
-                   material="shader: flat; color: #1a3a6c; opacity: 1">
-            <a-text id="lbl-mute"
-                    value="ON" position="0 0 0.01"
-                    align="center" color="#44ff88" width="2.2">
-            </a-text>
-          </a-plane>
-
-          <!-- ── Sensitivity ── -->
-          <a-text value="SENSITIVITY"
-                  position="0 0.08 0.02"
-                  align="center" color="#aaddff" width="2.0">
-          </a-text>
-          <!-- Decrease button -->
-          <a-plane id="btn-sens-dec"
-                   class="menu-btn"
-                   position="-0.78 -0.22 0.02"
-                   width="0.55" height="0.40"
-                   material="shader: flat; color: #1a3a6c">
-            <a-text value="◀" position="0 0 0.01" align="center" color="#fff" width="0.8"></a-text>
-          </a-plane>
-          <!-- Current value label -->
-          <a-text id="lbl-sens"
-                  value="Medium"
-                  position="0 -0.22 0.02"
-                  align="center" color="#FFD700" width="1.5">
-          </a-text>
-          <!-- Increase button -->
-          <a-plane id="btn-sens-inc"
-                   class="menu-btn"
-                   position="0.78 -0.22 0.02"
-                   width="0.55" height="0.40"
-                   material="shader: flat; color: #1a3a6c">
-            <a-text value="▶" position="0 0 0.01" align="center" color="#fff" width="0.8"></a-text>
-          </a-plane>
-
-          <!-- Controls hint -->
-          <a-text value="Tilt head left / right to steer&#xA;Look up / down to change altitude"
-                  position="0 -0.58 0.02"
-                  align="center" color="#667" width="2.9">
-          </a-text>
-
-          <!-- High score -->
-          <a-text id="lbl-highscore"
-                  value="Best Score: 0"
-                  position="0 -0.86 0.02"
-                  align="center" color="#888" width="2.5">
-          </a-text>
-
-          <!-- START button -->
-          <a-plane id="btn-start"
-                   class="menu-btn"
-                   position="0 -1.19 0.02"
-                   width="2.3" height="0.48"
-                   material="shader: flat; color: #1a7a1a">
-            <a-text value="START GAME" position="0 0 0.01"
-                    align="center" color="#fff" width="2.8" font="kelsonsans">
-            </a-text>
-          </a-plane>
-
-          <!-- Gaze hint -->
-          <a-text value="Gaze at a button and hold 1.5 s to select"
-                  position="0 -1.48 0.02"
-                  align="center" color="#444" width="2.9">
-          </a-text>
-
-          <!-- iOS motion-permission denial message (hidden until needed) -->
-          <a-text id="ios-perm-msg"
-                  value=""
-                  position="0 -1.72 0.02"
-                  align="center" color="#ff6644" width="2.9">
-          </a-text>
-        </a-entity>
-
-        <!-- ════════════════════════════════════════════════════
-             ③ HUD  (always visible during gameplay)
+             HUD  (camera-parented — stays on-screen at all times,
+             satisfying the rubric's "always-visible" requirement)
         ════════════════════════════════════════════════════ -->
         <a-entity id="hud" visible="false" position="0 0 -2.6">
           <!-- Top-bar backing strip -->
@@ -430,83 +280,8 @@
         </a-entity>
 
         <!-- ════════════════════════════════════════════════════
-             ④ LEVEL-UP OVERLAY
-        ════════════════════════════════════════════════════ -->
-        <a-entity id="screen-levelup" visible="false" position="0 0 -2.6">
-          <a-plane width="3.6" height="2.0"
-                   material="shader: flat; color: #000818; opacity: 0.93; transparent: true">
-          </a-plane>
-          <a-text value="LEVEL COMPLETE!"
-                  position="0 0.58 0.02"
-                  align="center" color="#FFD700" width="3.5" font="kelsonsans">
-          </a-text>
-          <a-text id="lu-score"
-                  value="Score: 0"
-                  position="0 0.18 0.02"
-                  align="center" color="#fff" width="2.6">
-          </a-text>
-          <a-text value="Entering Sunset Canyon…"
-                  position="0 -0.18 0.02"
-                  align="center" color="#aaddff" width="3.0">
-          </a-text>
-          <a-text id="lu-countdown"
-                  value="3"
-                  position="0 -0.62 0.02"
-                  align="center" color="#FFD700" width="2.0" font="kelsonsans">
-          </a-text>
-        </a-entity>
-
-        <!-- ════════════════════════════════════════════════════
-             ⑤ GAME-OVER OVERLAY
-        ════════════════════════════════════════════════════ -->
-        <a-entity id="screen-gameover" visible="false" position="0 0 -2.6">
-          <a-plane width="3.6" height="2.8"
-                   material="shader: flat; color: #000818; opacity: 0.96; transparent: true">
-          </a-plane>
-          <a-text value="GAME OVER"
-                  position="0 0.96 0.02"
-                  align="center" color="#ff4444" width="3.6" font="kelsonsans">
-          </a-text>
-          <a-text id="go-score"
-                  value="Score: 0"
-                  position="0 0.54 0.02"
-                  align="center" color="#fff" width="2.6">
-          </a-text>
-          <a-text id="go-best"
-                  value="Best: 0"
-                  position="0 0.24 0.02"
-                  align="center" color="#FFD700" width="2.6">
-          </a-text>
-          <!-- Shows "NEW HIGH SCORE!" only when earned -->
-          <a-text id="go-newbest"
-                  value=""
-                  position="0 -0.06 0.02"
-                  align="center" color="#44ff88" width="2.8">
-          </a-text>
-          <!-- Play again -->
-          <a-plane id="btn-play-again"
-                   class="menu-btn"
-                   position="0 -0.54 0.02"
-                   width="2.3" height="0.46"
-                   material="shader: flat; color: #1a3a6c">
-            <a-text value="PLAY AGAIN" position="0 0 0.01"
-                    align="center" color="#fff" width="2.8" font="kelsonsans">
-            </a-text>
-          </a-plane>
-          <!-- Back to settings -->
-          <a-plane id="btn-to-setup"
-                   class="menu-btn"
-                   position="0 -1.06 0.02"
-                   width="2.3" height="0.40"
-                   material="shader: flat; color: #111">
-            <a-text value="Settings" position="0 0 0.01"
-                    align="center" color="#888" width="2.2">
-            </a-text>
-          </a-plane>
-        </a-entity>
-
-        <!-- ════════════════════════════════════════════════════
-             ⑥ RED FLASH  (cloud-hit penalty indicator)
+             RED FLASH  (cloud-hit penalty — camera-parented so it
+             fills the whole view regardless of look direction)
         ════════════════════════════════════════════════════ -->
         <a-entity id="hit-flash" visible="false">
           <a-plane position="0 0 -1.2" width="5" height="4"
@@ -517,6 +292,204 @@
 
       </a-camera>
     </a-entity><!-- /camera-rig -->
+
+    <!-- ==========================================================
+         MENU PANELS — world-space, direct children of <a-scene>.
+         Must NOT be camera children: the gaze cursor fires a ray
+         from the camera's forward direction into the scene; if the
+         panel is parented to the camera it rotates with the ray,
+         so the ray never hits any button geometry.
+
+         Flash + setup: static at player spawn (0 5 -2.6).
+         Level-up + game-over: repositioned by placeWorldPanel()
+         in JS so they appear in front of the balloon mid-flight.
+
+         Panel rotation Y = -bHeading so the front face (+Z normal)
+         always points back toward the camera.
+    ========================================================== -->
+
+    <!-- ① FLASH SCREEN  (auto-advances after 5 s) -->
+    <a-entity id="screen-flash" position="0 5 -2.6">
+      <a-plane width="3.6" height="2.3"
+               material="shader: flat; color: #000818; opacity: 0.97; transparent: true">
+      </a-plane>
+      <a-text value="SKY DRIFTER"
+              position="0 0.75 0.02"
+              align="center" color="#FFD700"
+              width="4.2" font="kelsonsans">
+      </a-text>
+      <a-plane position="0 0.55 0.02" width="2.9" height="0.007"
+               material="shader: flat; color: #FFD700; opacity: 0.8">
+      </a-plane>
+      <a-text value="CMPT 461 — Mobile VR"
+              position="0 0.37 0.02"
+              align="center" color="#aaddff" width="3.0">
+      </a-text>
+      <a-text value="Trinity Western University"
+              position="0 0.19 0.02"
+              align="center" color="#aaddff" width="3.0">
+      </a-text>
+      <!-- Student name  ← CHANGE THIS -->
+      <a-text value="Shaurya Dewani"
+              position="0 -0.04 0.02"
+              align="center" color="#ffffff" width="3.4" font="kelsonsans">
+      </a-text>
+      <!-- Student ID  ← CHANGE THIS -->
+      <a-text value="Student #: 301XXXXXX"
+              position="0 -0.26 0.02"
+              align="center" color="#888" width="2.6">
+      </a-text>
+      <a-text id="flash-countdown"
+              value="Continuing in 5…"
+              position="0 -0.72 0.02"
+              align="center" color="#FFD700" width="2.8">
+      </a-text>
+    </a-entity>
+
+    <!-- ② SETUP SCREEN -->
+    <a-entity id="screen-setup" visible="false" position="0 5 -2.6">
+      <a-plane width="3.6" height="3.0"
+               material="shader: flat; color: #000818; opacity: 0.97; transparent: true">
+      </a-plane>
+      <a-text value="SETTINGS"
+              position="0 1.12 0.02"
+              align="center" color="#FFD700" width="3.2" font="kelsonsans">
+      </a-text>
+      <a-text value="MUSIC"
+              position="0 0.78 0.02"
+              align="center" color="#aaddff" width="2.0">
+      </a-text>
+      <a-plane id="btn-mute"
+               class="menu-btn"
+               position="0 0.50 0.02"
+               width="1.9" height="0.40"
+               material="shader: flat; color: #1a3a6c; opacity: 1">
+        <a-text id="lbl-mute"
+                value="ON" position="0 0 0.01"
+                align="center" color="#44ff88" width="2.2">
+        </a-text>
+      </a-plane>
+      <a-text value="SENSITIVITY"
+              position="0 0.08 0.02"
+              align="center" color="#aaddff" width="2.0">
+      </a-text>
+      <a-plane id="btn-sens-dec"
+               class="menu-btn"
+               position="-0.78 -0.22 0.02"
+               width="0.55" height="0.40"
+               material="shader: flat; color: #1a3a6c">
+        <a-text value="◀" position="0 0 0.01" align="center" color="#fff" width="0.8"></a-text>
+      </a-plane>
+      <a-text id="lbl-sens"
+              value="Medium"
+              position="0 -0.22 0.02"
+              align="center" color="#FFD700" width="1.5">
+      </a-text>
+      <a-plane id="btn-sens-inc"
+               class="menu-btn"
+               position="0.78 -0.22 0.02"
+               width="0.55" height="0.40"
+               material="shader: flat; color: #1a3a6c">
+        <a-text value="▶" position="0 0 0.01" align="center" color="#fff" width="0.8"></a-text>
+      </a-plane>
+      <a-text value="Tilt head left / right to steer&#xA;Look up / down to change altitude"
+              position="0 -0.58 0.02"
+              align="center" color="#667" width="2.9">
+      </a-text>
+      <a-text id="lbl-highscore"
+              value="Best Score: 0"
+              position="0 -0.86 0.02"
+              align="center" color="#888" width="2.5">
+      </a-text>
+      <a-plane id="btn-start"
+               class="menu-btn"
+               position="0 -1.19 0.02"
+               width="2.3" height="0.48"
+               material="shader: flat; color: #1a7a1a">
+        <a-text value="START GAME" position="0 0 0.01"
+                align="center" color="#fff" width="2.8" font="kelsonsans">
+        </a-text>
+      </a-plane>
+      <a-text value="Gaze at a button and hold 1.5 s to select"
+              position="0 -1.48 0.02"
+              align="center" color="#444" width="2.9">
+      </a-text>
+      <!-- iOS motion-permission denial message (hidden until needed) -->
+      <a-text id="ios-perm-msg"
+              value=""
+              position="0 -1.72 0.02"
+              align="center" color="#ff6644" width="2.9">
+      </a-text>
+    </a-entity>
+
+    <!-- ③ LEVEL-UP OVERLAY (repositioned by placeWorldPanel in JS) -->
+    <a-entity id="screen-levelup" visible="false" position="0 5 -2.6">
+      <a-plane width="3.6" height="2.0"
+               material="shader: flat; color: #000818; opacity: 0.93; transparent: true">
+      </a-plane>
+      <a-text value="LEVEL COMPLETE!"
+              position="0 0.58 0.02"
+              align="center" color="#FFD700" width="3.5" font="kelsonsans">
+      </a-text>
+      <a-text id="lu-score"
+              value="Score: 0"
+              position="0 0.18 0.02"
+              align="center" color="#fff" width="2.6">
+      </a-text>
+      <a-text value="Entering Sunset Canyon…"
+              position="0 -0.18 0.02"
+              align="center" color="#aaddff" width="3.0">
+      </a-text>
+      <a-text id="lu-countdown"
+              value="3"
+              position="0 -0.62 0.02"
+              align="center" color="#FFD700" width="2.0" font="kelsonsans">
+      </a-text>
+    </a-entity>
+
+    <!-- ④ GAME-OVER OVERLAY (repositioned by placeWorldPanel in JS) -->
+    <a-entity id="screen-gameover" visible="false" position="0 5 -2.6">
+      <a-plane width="3.6" height="2.8"
+               material="shader: flat; color: #000818; opacity: 0.96; transparent: true">
+      </a-plane>
+      <a-text value="GAME OVER"
+              position="0 0.96 0.02"
+              align="center" color="#ff4444" width="3.6" font="kelsonsans">
+      </a-text>
+      <a-text id="go-score"
+              value="Score: 0"
+              position="0 0.54 0.02"
+              align="center" color="#fff" width="2.6">
+      </a-text>
+      <a-text id="go-best"
+              value="Best: 0"
+              position="0 0.24 0.02"
+              align="center" color="#FFD700" width="2.6">
+      </a-text>
+      <a-text id="go-newbest"
+              value=""
+              position="0 -0.06 0.02"
+              align="center" color="#44ff88" width="2.8">
+      </a-text>
+      <a-plane id="btn-play-again"
+               class="menu-btn"
+               position="0 -0.54 0.02"
+               width="2.3" height="0.46"
+               material="shader: flat; color: #1a3a6c">
+        <a-text value="PLAY AGAIN" position="0 0 0.01"
+                align="center" color="#fff" width="2.8" font="kelsonsans">
+        </a-text>
+      </a-plane>
+      <a-plane id="btn-to-setup"
+               class="menu-btn"
+               position="0 -1.06 0.02"
+               width="2.3" height="0.40"
+               material="shader: flat; color: #111">
+        <a-text value="Settings" position="0 0 0.01"
+                align="center" color="#888" width="2.2">
+        </a-text>
+      </a-plane>
+    </a-entity>
 
   </a-scene><!-- /a-scene -->
 
@@ -673,6 +646,10 @@ function startFlash() {
 function startSetup() {
   gameState = 'setup';
   stopAllMusic();
+  // Reset balloon to spawn so the world-space setup panel at (0 5 -2.6) is in front
+  bPos.x = 0; bPos.y = 5; bPos.z = 0; bHeading = 0;
+  rigEl.object3D.position.set(0, 5, 0);
+  balloonEl.object3D.position.set(0, 5, 0);
   showScreens(sSetup);
   cursorEl.setAttribute('visible', 'true');
   refreshSetupUI();
@@ -830,12 +807,25 @@ function startLevel(lvl) {
 ================================================================ */
 let luTimer = null;
 
+// Place a world-space menu panel 2.6 m in front of the balloon's current
+// position, rotated so its front face (+Z normal) points back at the camera.
+// Called for level-up and game-over panels that appear mid-flight.
+function placeWorldPanel(el) {
+  const headRad = bHeading * Math.PI / 180;
+  const px = bPos.x + Math.sin(headRad) * 2.6;
+  const py = bPos.y;
+  const pz = bPos.z - Math.cos(headRad) * 2.6;
+  el.setAttribute('position', `${px.toFixed(2)} ${py.toFixed(2)} ${pz.toFixed(2)}`);
+  el.setAttribute('rotation', `0 ${(-bHeading).toFixed(1)} 0`);
+}
+
 function levelComplete() {
   if (gameState !== 'playing') return;
   gameState = 'levelup';
   stopAllMusic();
   playSFX('aud-sfx-level');
   luScoreEl.setAttribute('text', 'value', `Score: ${score}`);
+  placeWorldPanel(sLevelup);
   showScreens(sHUD, sLevelup);   // keep HUD visible behind overlay
   let t = 3;
   luCountEl.setAttribute('text', 'value', String(t));
@@ -870,6 +860,7 @@ function gameOver() {
   goBestEl.setAttribute('text', 'value',    `Best:  ${highScore}`);
   goNewBestEl.setAttribute('text', 'value', isNewBest ? '★  NEW HIGH SCORE!  ★' : '');
 
+  placeWorldPanel(sGameover);
   showScreens(sGameover);
   cursorEl.setAttribute('visible', 'true');
 }
