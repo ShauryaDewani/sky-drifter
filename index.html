@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Sky Drifter — CMPT 461</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #000010; }
+
+    /* Pre-scene loading overlay (plain HTML, disappears once A-Frame fires "loaded") */
+    #loading-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #000010;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: #fff; font-family: 'Arial', sans-serif;
+      transition: opacity 0.6s ease;
+    }
+    #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+    #loading-screen h1 { font-size: 2.4rem; color: #FFD700; letter-spacing: 0.15em; }
+    #loading-screen p  { margin-top: 0.6rem; color: #aaddff; font-size: 1rem; }
+    .loader-bar {
+      margin-top: 1.4rem; width: 220px; height: 4px;
+      background: #222; border-radius: 2px; overflow: hidden;
+    }
+    .loader-fill {
+      height: 100%; width: 0%; background: #FFD700;
+      border-radius: 2px;
+      animation: fill 2.5s ease forwards;
+    }
+    @keyframes fill { to { width: 100%; } }
+  </style>
+
+  <!-- ============================================================
+       DEPENDENCIES  (CDN — no build step needed)
+  ============================================================ -->
+  <!-- A-Frame 1.6.0 -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- Particle system for balloon trail -->
+  <script src="https://unpkg.com/aframe-particle-system-component@1.1.x/dist/aframe-particle-system-component.js"></script>
+</head>
+
+<body>
+
+  <!-- HTML loading screen (pure CSS, shown before WebGL boots) -->
+  <div id="loading-screen">
+    <h1>SKY DRIFTER</h1>
+    <p>CMPT 461 · Trinity Western University</p>
+    <div class="loader-bar"><div class="loader-fill"></div></div>
+  </div>
+
+  <!-- ==============================================================
+       A-FRAME SCENE
+  ============================================================== -->
+  <a-scene
+    id="main-scene"
+    vr-mode-ui="enabled: true"
+    renderer="antialias: true; colorManagement: true; sortObjects: true"
+    loading-screen="enabled: false"
+    shadow="type: basic">
+
+    <!-- ==========================================================
+         ASSETS  (audio only; textures are commented — swap in
+         your own files from assets/textures/ when ready)
+    ========================================================== -->
+    <a-assets timeout="15000">
+
+      <!-- AUDIO ─────────────────────────────────────────────────
+           Drop MP3/OGG files into assets/audio/.
+           Recommended free sources:
+             • freemusicarchive.org  (CC-licensed ambient tracks)
+             • freesound.org         (CC SFX)
+             • zapsplat.com          (free with attribution)
+      -->
+      <audio id="aud-music-l1"  src="assets/audio/music-day.mp3"    loop preload="auto" crossorigin="anonymous"></audio>
+      <audio id="aud-music-l2"  src="assets/audio/music-dusk.mp3"   loop preload="auto" crossorigin="anonymous"></audio>
+      <audio id="aud-sfx-ring"  src="assets/audio/sfx-ring.mp3"          preload="auto" crossorigin="anonymous"></audio>
+      <audio id="aud-sfx-orb"   src="assets/audio/sfx-orb.mp3"           preload="auto" crossorigin="anonymous"></audio>
+      <audio id="aud-sfx-cloud" src="assets/audio/sfx-cloud.mp3"         preload="auto" crossorigin="anonymous"></audio>
+      <audio id="aud-sfx-level" src="assets/audio/sfx-levelup.mp3"       preload="auto" crossorigin="anonymous"></audio>
+
+      <!-- TEXTURES ───────────────────────────────────────────────
+           Once you have the files, uncomment each line and set the
+           src, then reference them as e.g. src="#tex-balloon".
+           Suggested free sources:
+             • Poly Haven  : polyhaven.com/textures  (CC0)
+             • ambientCG   : ambientcg.com           (CC0)
+      -->
+      <!-- <img id="tex-balloon"    src="assets/textures/balloon.png">   -->
+      <!-- <img id="tex-basket"     src="assets/textures/basket.jpg">    -->
+      <!-- <img id="tex-ring"       src="assets/textures/ring.png">      -->
+      <!-- <img id="tex-orb"        src="assets/textures/orb.png">       -->
+      <!-- <img id="tex-cloud"      src="assets/textures/cloud.png">     -->
+      <!-- <img id="tex-ground-l1"  src="assets/textures/ground-meadow.jpg" repeat="40 40"> -->
+      <!-- <img id="tex-ground-l2"  src="assets/textures/ground-canyon.jpg" repeat="40 40"> -->
+      <!-- <img id="tex-sky-l1"     src="assets/textures/sky-day.jpg">   -->
+      <!-- <img id="tex-sky-l2"     src="assets/textures/sky-dusk.jpg">  -->
+    </a-assets>
+
+    <!-- ==========================================================
+         SKY  (single element — color swapped on level change)
+    ========================================================== -->
+    <a-sky id="sky" color="#87CEEB"></a-sky>
+
+    <!-- ==========================================================
+         LEVEL 1 ENVIRONMENT — Sunny Meadows
+    ========================================================== -->
+    <a-entity id="env-l1">
+      <!-- Sunlight -->
+      <a-light type="ambient"     color="#fffbe6" intensity="0.55"></a-light>
+      <a-light type="directional" color="#fffbe6" intensity="0.9"
+               position="1 2 -1" cast-shadow="true"></a-light>
+      <!-- Ground plane (2× depth of playfield) -->
+      <a-plane id="ground-l1"
+               position="0 0 -300" rotation="-90 0 0"
+               width="400" height="700"
+               color="#5c9e3f"
+               shadow="receive: true"
+               repeat="40 80">
+        <!-- To add texture: material="src: #tex-ground-l1; repeat: 40 80" -->
+      </a-plane>
+      <!-- Sun disc -->
+      <a-sphere position="90 130 -250" radius="9"
+                material="shader: flat; color: #FFFACD">
+      </a-sphere>
+      <!-- Distant rolling hills (decorative boxes) -->
+      <a-box position="-120 8 -320" width="80" height="22" depth="60"  color="#4a8a2f" shadow="receive: true"></a-box>
+      <a-box position=" 130 6 -280" width="70" height="16" depth="55"  color="#4a8a2f" shadow="receive: true"></a-box>
+      <a-box position="-40  5 -350" width="100" height="12" depth="50" color="#4a8a2f" shadow="receive: true"></a-box>
+    </a-entity>
+
+    <!-- ==========================================================
+         LEVEL 2 ENVIRONMENT — Sunset Canyon
+    ========================================================== -->
+    <a-entity id="env-l2" visible="false">
+      <!-- Warm dusk lighting -->
+      <a-light type="ambient"     color="#FF8C00" intensity="0.35"></a-light>
+      <a-light type="directional" color="#FF4500" intensity="0.75"
+               position="-1 0.4 -1"></a-light>
+      <!-- Ground -->
+      <a-plane id="ground-l2"
+               position="0 0 -330" rotation="-90 0 0"
+               width="400" height="750"
+               color="#7a3a1a"
+               shadow="receive: true">
+        <!-- To add texture: material="src: #tex-ground-l2; repeat: 40 80" -->
+      </a-plane>
+      <!-- Canyon left wall -->
+      <a-box position="-75 25 -330" width="30" height="55" depth="760"
+             color="#8B4513" shadow="receive: true"></a-box>
+      <!-- Canyon right wall -->
+      <a-box position=" 75 25 -330" width="30" height="55" depth="760"
+             color="#8B4513" shadow="receive: true"></a-box>
+      <!-- Dusk glow horizon strip -->
+      <a-plane position="0 0 -680" rotation="0 0 0" width="600" height="60"
+               material="shader: flat; color: #FF4500; opacity: 0.35; transparent: true; side: double">
+      </a-plane>
+    </a-entity>
+
+    <!-- ==========================================================
+         BALLOON  (visual only — position synced to camera rig in JS)
+    ========================================================== -->
+    <a-entity id="balloon-entity" position="0 5 0">
+
+      <!-- Envelope (sphere) -->
+      <a-sphere id="balloon-envelope"
+                position="0 1.25 0" radius="1.35"
+                color="#E84040"
+                shadow="cast: true; receive: false"
+                material="roughness: 0.55; metalness: 0.08">
+        <!-- Vertical stripe overlay (flat-shader so it glows a bit) -->
+        <a-cylinder position="0 0 0" radius="0.08" height="2.7"
+                    material="shader: flat; color: #FFD700" rotation="0 0 0"></a-cylinder>
+        <a-cylinder position="0 0 0" radius="0.08" height="2.7"
+                    material="shader: flat; color: #FFD700" rotation="0 90 0"></a-cylinder>
+        <a-cylinder position="0 0 0" radius="0.08" height="2.7"
+                    material="shader: flat; color: #fff" rotation="0 45 0"></a-cylinder>
+        <a-cylinder position="0 0 0" radius="0.08" height="2.7"
+                    material="shader: flat; color: #fff" rotation="0 135 0"></a-cylinder>
+      </a-sphere>
+
+      <!-- Basket (wicker box) -->
+      <a-box id="balloon-basket"
+             position="0 -0.6 0" width="0.9" height="0.65" depth="0.9"
+             color="#8B6914"
+             shadow="cast: true; receive: false"
+             material="roughness: 1.0; metalness: 0.0">
+      </a-box>
+
+      <!-- Suspension ropes (4 thin cylinders) -->
+      <a-cylinder position="-0.36 0.33 -0.36" radius="0.028" height="1.5"
+                  color="#5c4a00" rotation=" 10  45  10"></a-cylinder>
+      <a-cylinder position=" 0.36 0.33 -0.36" radius="0.028" height="1.5"
+                  color="#5c4a00" rotation=" 10 -45 -10"></a-cylinder>
+      <a-cylinder position="-0.36 0.33  0.36" radius="0.028" height="1.5"
+                  color="#5c4a00" rotation="-10 -45  10"></a-cylinder>
+      <a-cylinder position=" 0.36 0.33  0.36" radius="0.028" height="1.5"
+                  color="#5c4a00" rotation="-10  45 -10"></a-cylinder>
+
+      <!-- BONUS: Particle trail (fire / warm exhaust from burner) -->
+      <a-entity id="balloon-trail"
+                position="0 -0.35 0"
+                particle-system="
+                  preset:          default;
+                  particleCount:   90;
+                  maxAge:          1.4;
+                  velocityValue:   0 1.8 0;
+                  velocitySpread:  0.4 0.2 0.4;
+                  accelerationValue: 0 0.3 0;
+                  size:            0.18;
+                  color:           #ff9900, #ff4400, #330000;
+                  opacity:         0.9, 0.4, 0;
+                  blending:        additive;
+                  direction:       1;
+                  rotationAngle:   0">
+      </a-entity>
+    </a-entity>
+
+    <!-- ==========================================================
+         COLLECTIBLE / OBSTACLE CONTAINERS  (filled dynamically)
+    ========================================================== -->
+    <a-entity id="rings-container"></a-entity>
+    <a-entity id="orbs-container"></a-entity>
+    <a-entity id="clouds-container"></a-entity>
+    <a-entity id="spires-container"></a-entity>
+
+    <!-- ==========================================================
+         CAMERA RIG  (this is what physically moves through the world)
+    ========================================================== -->
+    <a-entity id="camera-rig" position="0 5 0">
+
+      <a-camera id="camera"
+                look-controls="enabled: true; pointerLockEnabled: false; reverseMouseDrag: false"
+                wasd-controls="enabled: false"
+                fov="80"
+                near="0.1" far="1200">
+
+        <!-- ────────────────────────────────────────────────────
+             GAZE CURSOR  (fuse-based — menus only)
+             Raycasts only against .menu-btn planes.
+             Disabled during gameplay via JS.
+        ──────────────────────────────────────────────────────── -->
+        <a-cursor id="gaze-cursor"
+                  fuse="true"
+                  fuse-timeout="1500"
+                  raycaster="objects: .menu-btn; far: 5"
+                  animation__fusing="property: scale; startEvents: fusing;
+                                     easing: easeInQuad; dur: 1500;
+                                     from: 1 1 1; to: 0.15 0.15 0.15"
+                  animation__click="property: scale; startEvents: click;
+                                    easing: easeOutBounce; dur: 200;
+                                    from: 0.15 0.15 0.15; to: 1 1 1"
+                  animation__mouseleave="property: scale; startEvents: mouseleave;
+                                         easing: easeOutQuad; dur: 300;
+                                         to: 1 1 1"
+                  color="#FFD700"
+                  opacity="0.9"
+                  radius="0.012"
+                  material="shader: flat">
+        </a-cursor>
+
+        <!-- ════════════════════════════════════════════════════
+             ① FLASH SCREEN  (auto-advances after 5 s)
+        ════════════════════════════════════════════════════ -->
+        <a-entity id="screen-flash" position="0 0 -2.6">
+
+          <!-- Background panel -->
+          <a-plane width="3.6" height="2.3"
+                   material="shader: flat; color: #000818; opacity: 0.97; transparent: true">
+          </a-plane>
+
+          <!-- Game title -->
+          <a-text value="SKY DRIFTER"
+                  position="0 0.75 0.02"
+                  align="center" color="#FFD700"
+                  width="4.2" font="kelsonsans">
+          </a-text>
+
+          <!-- Gold rule under title -->
+          <a-plane position="0 0.55 0.02" width="2.9" height="0.007"
+                   material="shader: flat; color: #FFD700; opacity: 0.8">
+          </a-plane>
+
+          <!-- Course / institution -->
+          <a-text value="CMPT 461 — Mobile VR"
+                  position="0 0.37 0.02"
+                  align="center" color="#aaddff" width="3.0">
+          </a-text>
+          <a-text value="Trinity Western University"
+                  position="0 0.19 0.02"
+                  align="center" color="#aaddff" width="3.0">
+          </a-text>
+
+          <!-- Student name  ← CHANGE THIS -->
+          <a-text value="Shaurya Dewani"
+                  position="0 -0.04 0.02"
+                  align="center" color="#ffffff" width="3.4" font="kelsonsans">
+          </a-text>
+
+          <!-- Student ID  ← CHANGE THIS -->
+          <a-text value="Student #: 301XXXXXX"
+                  position="0 -0.26 0.02"
+                  align="center" color="#888" width="2.6">
+          </a-text>
+
+          <!-- Countdown -->
+          <a-text id="flash-countdown"
+                  value="Continuing in 5…"
+                  position="0 -0.72 0.02"
+                  align="center" color="#FFD700" width="2.8">
+          </a-text>
+        </a-entity>
+
+        <!-- ════════════════════════════════════════════════════
+             ② SETUP SCREEN
+        ════════════════════════════════════════════════════ -->
+        <a-entity id="screen-setup" visible="false" position="0 0 -2.6">
+
+          <!-- Panel background -->
+          <a-plane width="3.6" height="3.0"
+                   material="shader: flat; color: #000818; opacity: 0.97; transparent: true">
+          </a-plane>
+
+          <!-- Title -->
+          <a-text value="SETTINGS"
+                  position="0 1.12 0.02"
+                  align="center" color="#FFD700" width="3.2" font="kelsonsans">
+          </a-text>
+
+          <!-- ── Music toggle ── -->
+          <a-text value="MUSIC"
+                  position="0 0.78 0.02"
+                  align="center" color="#aaddff" width="2.0">
+          </a-text>
+          <!-- Button plane — must have class="menu-btn" for raycaster -->
+          <a-plane id="btn-mute"
+                   class="menu-btn"
+                   position="0 0.50 0.02"
+                   width="1.9" height="0.40"
+                   material="shader: flat; color: #1a3a6c; opacity: 1">
+            <a-text id="lbl-mute"
+                    value="ON" position="0 0 0.01"
+                    align="center" color="#44ff88" width="2.2">
+            </a-text>
+          </a-plane>
+
+          <!-- ── Sensitivity ── -->
+          <a-text value="SENSITIVITY"
+                  position="0 0.08 0.02"
+                  align="center" color="#aaddff" width="2.0">
+          </a-text>
+          <!-- Decrease button -->
+          <a-plane id="btn-sens-dec"
+                   class="menu-btn"
+                   position="-0.78 -0.22 0.02"
+                   width="0.55" height="0.40"
+                   material="shader: flat; color: #1a3a6c">
+            <a-text value="◀" position="0 0 0.01" align="center" color="#fff" width="0.8"></a-text>
+          </a-plane>
+          <!-- Current value label -->
+          <a-text id="lbl-sens"
+                  value="Medium"
+                  position="0 -0.22 0.02"
+                  align="center" color="#FFD700" width="1.5">
+          </a-text>
+          <!-- Increase button -->
+          <a-plane id="btn-sens-inc"
+                   class="menu-btn"
+                   position="0.78 -0.22 0.02"
+                   width="0.55" height="0.40"
+                   material="shader: flat; color: #1a3a6c">
+            <a-text value="▶" position="0 0 0.01" align="center" color="#fff" width="0.8"></a-text>
+          </a-plane>
+
+          <!-- Controls hint -->
+          <a-text value="Tilt head left / right to steer&#xA;Look up / down to change altitude"
+                  position="0 -0.58 0.02"
+                  align="center" color="#667" width="2.9">
+          </a-text>
+
+          <!-- High score -->
+          <a-text id="lbl-highscore"
+                  value="Best Score: 0"
+                  position="0 -0.86 0.02"
+                  align="center" color="#888" width="2.5">
+          </a-text>
+
+          <!-- START button -->
+          <a-plane id="btn-start"
+                   class="menu-btn"
+                   position="0 -1.19 0.02"
+                   width="2.3" height="0.48"
+                   material="shader: flat; color: #1a7a1a">
+            <a-text value="START GAME" position="0 0 0.01"
+                    align="center" color="#fff" width="2.8" font="kelsonsans">
+            </a-text>
+          </a-plane>
+
+          <!-- Gaze hint -->
+          <a-text value="Gaze at a button and hold 1.5 s to select"
+                  position="0 -1.48 0.02"
+                  align="center" color="#444" width="2.9">
+          </a-text>
+
+          <!-- iOS motion-permission denial message (hidden until needed) -->
+          <a-text id="ios-perm-msg"
+                  value=""
+                  position="0 -1.72 0.02"
+                  align="center" color="#ff6644" width="2.9">
+          </a-text>
+        </a-entity>
+
+        <!-- ════════════════════════════════════════════════════
+             ③ HUD  (always visible during gameplay)
+        ════════════════════════════════════════════════════ -->
+        <a-entity id="hud" visible="false" position="0 0 -2.6">
+          <!-- Top-bar backing strip -->
+          <a-plane position="0 0.94 0" width="3.6" height="0.30"
+                   material="shader: flat; color: #000; opacity: 0.45; transparent: true">
+          </a-plane>
+          <!-- Score (left) -->
+          <a-text id="hud-score"
+                  value="Score: 0"
+                  position="-1.60 0.94 0.01"
+                  align="left" color="#fff" width="1.9">
+          </a-text>
+          <!-- Level (centre) -->
+          <a-text id="hud-level"
+                  value="Level 1 · Sunny Meadows"
+                  position="0 0.94 0.01"
+                  align="center" color="#FFD700" width="2.0">
+          </a-text>
+          <!-- Personal best (right) -->
+          <a-text id="hud-best"
+                  value="Best: 0"
+                  position="1.60 0.94 0.01"
+                  align="right" color="#aaa" width="1.9">
+          </a-text>
+        </a-entity>
+
+        <!-- ════════════════════════════════════════════════════
+             ④ LEVEL-UP OVERLAY
+        ════════════════════════════════════════════════════ -->
+        <a-entity id="screen-levelup" visible="false" position="0 0 -2.6">
+          <a-plane width="3.6" height="2.0"
+                   material="shader: flat; color: #000818; opacity: 0.93; transparent: true">
+          </a-plane>
+          <a-text value="LEVEL COMPLETE!"
+                  position="0 0.58 0.02"
+                  align="center" color="#FFD700" width="3.5" font="kelsonsans">
+          </a-text>
+          <a-text id="lu-score"
+                  value="Score: 0"
+                  position="0 0.18 0.02"
+                  align="center" color="#fff" width="2.6">
+          </a-text>
+          <a-text value="Entering Sunset Canyon…"
+                  position="0 -0.18 0.02"
+                  align="center" color="#aaddff" width="3.0">
+          </a-text>
+          <a-text id="lu-countdown"
+                  value="3"
+                  position="0 -0.62 0.02"
+                  align="center" color="#FFD700" width="2.0" font="kelsonsans">
+          </a-text>
+        </a-entity>
+
+        <!-- ════════════════════════════════════════════════════
+             ⑤ GAME-OVER OVERLAY
+        ════════════════════════════════════════════════════ -->
+        <a-entity id="screen-gameover" visible="false" position="0 0 -2.6">
+          <a-plane width="3.6" height="2.8"
+                   material="shader: flat; color: #000818; opacity: 0.96; transparent: true">
+          </a-plane>
+          <a-text value="GAME OVER"
+                  position="0 0.96 0.02"
+                  align="center" color="#ff4444" width="3.6" font="kelsonsans">
+          </a-text>
+          <a-text id="go-score"
+                  value="Score: 0"
+                  position="0 0.54 0.02"
+                  align="center" color="#fff" width="2.6">
+          </a-text>
+          <a-text id="go-best"
+                  value="Best: 0"
+                  position="0 0.24 0.02"
+                  align="center" color="#FFD700" width="2.6">
+          </a-text>
+          <!-- Shows "NEW HIGH SCORE!" only when earned -->
+          <a-text id="go-newbest"
+                  value=""
+                  position="0 -0.06 0.02"
+                  align="center" color="#44ff88" width="2.8">
+          </a-text>
+          <!-- Play again -->
+          <a-plane id="btn-play-again"
+                   class="menu-btn"
+                   position="0 -0.54 0.02"
+                   width="2.3" height="0.46"
+                   material="shader: flat; color: #1a3a6c">
+            <a-text value="PLAY AGAIN" position="0 0 0.01"
+                    align="center" color="#fff" width="2.8" font="kelsonsans">
+            </a-text>
+          </a-plane>
+          <!-- Back to settings -->
+          <a-plane id="btn-to-setup"
+                   class="menu-btn"
+                   position="0 -1.06 0.02"
+                   width="2.3" height="0.40"
+                   material="shader: flat; color: #111">
+            <a-text value="Settings" position="0 0 0.01"
+                    align="center" color="#888" width="2.2">
+            </a-text>
+          </a-plane>
+        </a-entity>
+
+        <!-- ════════════════════════════════════════════════════
+             ⑥ RED FLASH  (cloud-hit penalty indicator)
+        ════════════════════════════════════════════════════ -->
+        <a-entity id="hit-flash" visible="false">
+          <a-plane position="0 0 -1.2" width="5" height="4"
+                   material="shader: flat; color: #ff0000; opacity: 0.28;
+                             transparent: true; side: double">
+          </a-plane>
+        </a-entity>
+
+      </a-camera>
+    </a-entity><!-- /camera-rig -->
+
+  </a-scene><!-- /a-scene -->
+
+
+  <!-- ==============================================================
+       GAME SCRIPT
+  ============================================================== -->
+  <script>
+'use strict';
+
+/* ================================================================
+   CONSTANTS
+================================================================ */
+const FWD_SPEED   = { 1: 0.055, 2: 0.085 };   // world-units / ~16ms tick
+const MAX_TURN    = 1.6;    // deg added to heading per tick max
+const MAX_CLIMB   = 0.075;  // world-units/tick altitude change max
+const ALT_MIN     = 1.5;
+const ALT_MAX     = 38;
+const DEADZONE    = 7;      // degrees of head-tilt to ignore
+
+const RING_SCORE  = 10;
+const ORB_SCORE   = 5;
+const CLOUD_PEN   = 15;
+const RING_R      = 3.5;    // pass-through radius (XY distance)
+const ORB_R       = 2.1;    // collect radius
+const CLOUD_R     = 3.6;    // penalty trigger radius
+
+const SENS_VALUES = [0.35, 0.65, 1.0, 1.40, 1.85];
+const SENS_LABELS = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
+
+const LEVEL_CFG = {
+  1: { rings: 20, orbs: 28, clouds: 14, depth: 530, ringColor: '#FFD700', orbColor: '#00ffcc', cloudColor: '#eeeef5' },
+  2: { rings: 26, orbs: 35, clouds: 22, depth: 660, ringColor: '#FF6347', orbColor: '#ffaa00', cloudColor: '#cc7755' }
+};
+
+const LEVEL_NAMES = { 1: 'Sunny Meadows', 2: 'Sunset Canyon' };
+const LEVEL_SKY   = { 1: '#87CEEB',       2: '#c05015'       };
+
+/* ================================================================
+   STATE
+================================================================ */
+let gameState    = 'flash';   // flash | setup | playing | levelup | gameover
+let level        = 1;
+let score        = 0;
+let sensIdx      = 2;
+let musicMuted   = false;
+let highScore    = parseInt(localStorage.getItem('skyDrifterHigh') || '0', 10);
+
+// Balloon world-space position & heading
+const bPos = { x: 0, y: 5, z: 0 };
+let bHeading = 0;   // degrees, world Y
+
+// Active objects: {el, x, y, z, used, penalized}
+let rings  = [];
+let orbs   = [];
+let clouds = [];
+
+/* ================================================================
+   DOM ELEMENT REFERENCES
+================================================================ */
+const sceneEl       = document.getElementById('main-scene');
+const rigEl         = document.getElementById('camera-rig');
+const cameraEl      = document.getElementById('camera');
+const balloonEl     = document.getElementById('balloon-entity');
+const cursorEl      = document.getElementById('gaze-cursor');
+
+const envL1         = document.getElementById('env-l1');
+const envL2         = document.getElementById('env-l2');
+const skyEl         = document.getElementById('sky');
+const ringsCtEl     = document.getElementById('rings-container');
+const orbsCtEl      = document.getElementById('orbs-container');
+const cloudsCtEl    = document.getElementById('clouds-container');
+const spiresCtEl    = document.getElementById('spires-container');
+
+const sFlash        = document.getElementById('screen-flash');
+const sSetup        = document.getElementById('screen-setup');
+const sHUD          = document.getElementById('hud');
+const sLevelup      = document.getElementById('screen-levelup');
+const sGameover     = document.getElementById('screen-gameover');
+const hitFlashEl    = document.getElementById('hit-flash');
+
+const flashCountEl  = document.getElementById('flash-countdown');
+const lblMute       = document.getElementById('lbl-mute');
+const lblSens       = document.getElementById('lbl-sens');
+const lblHighscore  = document.getElementById('lbl-highscore');
+const hudScoreEl    = document.getElementById('hud-score');
+const hudLevelEl    = document.getElementById('hud-level');
+const hudBestEl     = document.getElementById('hud-best');
+const luScoreEl     = document.getElementById('lu-score');
+const luCountEl     = document.getElementById('lu-countdown');
+const goScoreEl     = document.getElementById('go-score');
+const goBestEl      = document.getElementById('go-best');
+const goNewBestEl   = document.getElementById('go-newbest');
+
+/* ================================================================
+   AUDIO HELPERS
+================================================================ */
+function playMusic(id) {
+  if (musicMuted) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
+function stopAllMusic() {
+  ['aud-music-l1', 'aud-music-l2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.pause(); el.currentTime = 0; }
+  });
+}
+function playSFX(id) {
+  // SFX always plays even when music is muted (rubric: music mutable, SFX separate)
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
+
+/* ================================================================
+   SCREEN MANAGER
+================================================================ */
+const ALL_SCREENS = () => [sFlash, sSetup, sHUD, sLevelup, sGameover];
+
+function showScreens(...active) {
+  ALL_SCREENS().forEach(s => s && s.setAttribute('visible', 'false'));
+  active.forEach(s => s && s.setAttribute('visible', 'true'));
+}
+
+/* ================================================================
+   FLASH SCREEN  (shows credentials, auto-advances after 5 s)
+================================================================ */
+let flashTimerId = null;
+
+function startFlash() {
+  gameState = 'flash';
+  cursorEl.setAttribute('visible', 'false');
+  showScreens(sFlash);
+  let t = 5;
+  flashCountEl.setAttribute('text', 'value', `Continuing in ${t}…`);
+  flashTimerId = setInterval(() => {
+    t--;
+    if (t > 0) {
+      flashCountEl.setAttribute('text', 'value', `Continuing in ${t}…`);
+    } else {
+      clearInterval(flashTimerId);
+      startSetup();
+    }
+  }, 1000);
+}
+
+/* ================================================================
+   SETUP SCREEN
+================================================================ */
+function startSetup() {
+  gameState = 'setup';
+  stopAllMusic();
+  showScreens(sSetup);
+  cursorEl.setAttribute('visible', 'true');
+  refreshSetupUI();
+}
+
+function refreshSetupUI() {
+  lblMute.setAttribute('text', 'value', musicMuted ? 'OFF' : 'ON');
+  lblMute.setAttribute('text', 'color', musicMuted ? '#ff6666' : '#44ff88');
+  document.getElementById('btn-mute')
+          .setAttribute('material', `shader: flat; color: ${musicMuted ? '#4a1a1a' : '#1a3a6c'}`);
+  lblSens.setAttribute('text', 'value', SENS_LABELS[sensIdx]);
+  lblHighscore.setAttribute('text', 'value', `Best Score: ${highScore}`);
+}
+
+/* ================================================================
+   OBJECT SPAWNING
+================================================================ */
+function rnd(min, max) { return min + Math.random() * (max - min); }
+
+function clearObjects() {
+  rings = []; orbs = []; clouds = [];
+  [ringsCtEl, orbsCtEl, cloudsCtEl, spiresCtEl].forEach(ct => {
+    while (ct.firstChild) ct.removeChild(ct.firstChild);
+  });
+}
+
+function makeRing(x, y, z, color) {
+  const el = document.createElement('a-torus');
+  el.setAttribute('position', `${x} ${y} ${z}`);
+  el.setAttribute('radius', '3.5');
+  el.setAttribute('radius-tubular', '0.28');
+  el.setAttribute('rotation', `${rnd(-12,12)} ${rnd(-18,18)} 0`);
+  el.setAttribute('color', color);
+  el.setAttribute('material', `emissive: ${color}; emissiveIntensity: 0.35; roughness: 0.3`);
+  return el;
+}
+
+function makeOrb(x, y, z, color) {
+  const el = document.createElement('a-sphere');
+  el.setAttribute('position', `${x} ${y} ${z}`);
+  el.setAttribute('radius', '0.68');
+  el.setAttribute('color', color);
+  el.setAttribute('material', `emissive: ${color}; emissiveIntensity: 0.85; roughness: 0.15`);
+  return el;
+}
+
+function makeCloud(x, y, z, color) {
+  const grp = document.createElement('a-entity');
+  grp.setAttribute('position', `${x} ${y} ${z}`);
+  // Cloud = 4 overlapping spheres
+  [[0,0,0, 3.3],[2.1,0.5,0.2, 2.7],[-2.0,0.3,-0.3, 2.5],[0.4,-0.3,1.4, 2.1]].forEach(
+    ([cx,cy,cz,cr]) => {
+      const s = document.createElement('a-sphere');
+      s.setAttribute('position', `${cx} ${cy} ${cz}`);
+      s.setAttribute('radius', `${cr}`);
+      s.setAttribute('color', color);
+      s.setAttribute('material', 'opacity: 0.85; transparent: true; roughness: 1.0');
+      grp.appendChild(s);
+    }
+  );
+  return grp;
+}
+
+function spawnObjects(lvl) {
+  const cfg   = LEVEL_CFG[lvl];
+  const depth = cfg.depth;
+
+  // Rings — evenly spaced along depth with random XY offsets
+  for (let i = 0; i < cfg.rings; i++) {
+    const z  = -30 - i * (depth / cfg.rings);
+    const x  = rnd(-14, 14);
+    const y  = rnd(3, 19);
+    const el = makeRing(x, y, z, cfg.ringColor);
+    ringsCtEl.appendChild(el);
+    rings.push({ el, x, y, z, used: false });
+  }
+
+  // Orbs — scattered randomly across playfield
+  for (let i = 0; i < cfg.orbs; i++) {
+    const z  = rnd(-25, -depth);
+    const x  = rnd(-18, 18);
+    const y  = rnd(2, 22);
+    const el = makeOrb(x, y, z, cfg.orbColor);
+    orbsCtEl.appendChild(el);
+    orbs.push({ el, x, y, z, used: false });
+  }
+
+  // Clouds
+  for (let i = 0; i < cfg.clouds; i++) {
+    const z   = rnd(-40, -depth);
+    const x   = rnd(-22, 22);
+    const y   = rnd(7, 24);
+    const el  = makeCloud(x, y, z, cfg.cloudColor);
+    cloudsCtEl.appendChild(el);
+    clouds.push({ el, x, y, z, penalized: false });
+  }
+
+  // Level 2 only: rock spires lining canyon floor
+  if (lvl === 2) {
+    for (let i = 0; i < 14; i++) {
+      const z  = rnd(-40, -depth);
+      const sx = (Math.random() < 0.5 ? -1 : 1) * rnd(14, 30);
+      const h  = rnd(16, 48);
+      const sp = document.createElement('a-entity');
+      sp.setAttribute('position', `${sx} 0 ${z}`);
+      const body = document.createElement('a-cylinder');
+      body.setAttribute('position', `0 ${h * 0.5} 0`);
+      body.setAttribute('radius-bottom', `${rnd(1.5, 3.8)}`);
+      body.setAttribute('radius-top',    `${rnd(0.1, 0.9)}`);
+      body.setAttribute('height', `${h}`);
+      body.setAttribute('color', '#7a3822');
+      body.setAttribute('material', 'roughness: 1.0');
+      sp.appendChild(body);
+      spiresCtEl.appendChild(sp);
+    }
+  }
+}
+
+/* ================================================================
+   LEVEL START
+================================================================ */
+function startLevel(lvl) {
+  level    = lvl;
+  gameState = 'playing';
+
+  // Reset balloon to start position
+  bPos.x = 0; bPos.y = 5; bPos.z = 0; bHeading = 0;
+  const posStr = '0 5 0';
+  rigEl.setAttribute('position', posStr);
+  balloonEl.setAttribute('position', posStr);
+  balloonEl.setAttribute('rotation', '0 0 0');
+
+  // Swap environment
+  skyEl.setAttribute('color', LEVEL_SKY[lvl]);
+  envL1.setAttribute('visible', lvl === 1 ? 'true' : 'false');
+  envL2.setAttribute('visible', lvl === 2 ? 'true' : 'false');
+
+  // Spawn objects for this level
+  clearObjects();
+  spawnObjects(lvl);
+
+  // Show HUD, hide menus, disable cursor
+  showScreens(sHUD);
+  hitFlashEl.setAttribute('visible', 'false');
+  cursorEl.setAttribute('visible', 'false');
+  updateHUD();
+
+  // Music
+  stopAllMusic();
+  playMusic(lvl === 1 ? 'aud-music-l1' : 'aud-music-l2');
+}
+
+/* ================================================================
+   LEVEL COMPLETE
+================================================================ */
+let luTimer = null;
+
+function levelComplete() {
+  if (gameState !== 'playing') return;
+  gameState = 'levelup';
+  stopAllMusic();
+  playSFX('aud-sfx-level');
+  luScoreEl.setAttribute('text', 'value', `Score: ${score}`);
+  showScreens(sHUD, sLevelup);   // keep HUD visible behind overlay
+  let t = 3;
+  luCountEl.setAttribute('text', 'value', String(t));
+  luTimer = setInterval(() => {
+    t--;
+    if (t > 0) {
+      luCountEl.setAttribute('text', 'value', String(t));
+    } else {
+      clearInterval(luTimer);
+      sLevelup.setAttribute('visible', 'false');
+      startLevel(2);
+    }
+  }, 1000);
+}
+
+/* ================================================================
+   GAME OVER  (called after level 2 end, or can be extended for
+               health system)
+================================================================ */
+function gameOver() {
+  if (gameState === 'gameover') return;
+  gameState = 'gameover';
+  stopAllMusic();
+
+  const isNewBest = score > highScore;
+  if (isNewBest) {
+    highScore = score;
+    localStorage.setItem('skyDrifterHigh', String(highScore));
+  }
+
+  goScoreEl.setAttribute('text', 'value',   `Score: ${score}`);
+  goBestEl.setAttribute('text', 'value',    `Best:  ${highScore}`);
+  goNewBestEl.setAttribute('text', 'value', isNewBest ? '★  NEW HIGH SCORE!  ★' : '');
+
+  showScreens(sGameover);
+  cursorEl.setAttribute('visible', 'true');
+}
+
+/* ================================================================
+   HUD UPDATE
+================================================================ */
+function updateHUD() {
+  hudScoreEl.setAttribute('text', 'value', `Score: ${score}`);
+  hudLevelEl.setAttribute('text', 'value', `Level ${level} · ${LEVEL_NAMES[level]}`);
+  hudBestEl.setAttribute('text', 'value',  `Best: ${highScore}`);
+}
+
+/* ================================================================
+   COLLISION DETECTION  (called every tick during gameplay)
+================================================================ */
+let hitFlashTimer = null;
+
+function showHitFlash() {
+  hitFlashEl.setAttribute('visible', 'true');
+  if (hitFlashTimer) clearTimeout(hitFlashTimer);
+  hitFlashTimer = setTimeout(() => hitFlashEl.setAttribute('visible', 'false'), 380);
+}
+
+function dist3(ax,ay,az, bx,by,bz) {
+  const dx=ax-bx, dy=ay-by, dz=az-bz;
+  return Math.sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+// Checks whether 65% of rings are cleared to advance to next level
+function checkAdvance() {
+  if (level === 1) {
+    const cleared = rings.filter(r => r.used).length;
+    if (cleared >= Math.ceil(LEVEL_CFG[1].rings * 0.65)) {
+      levelComplete();
+    }
+  }
+}
+
+function checkCollisions() {
+  const { x: bx, y: by, z: bz } = bPos;
+
+  // ── Rings ──────────────────────────────────────────────────────
+  for (const r of rings) {
+    if (r.used) continue;
+    const dz = bz - r.z;
+    // Only check when balloon is within 1.8 units of ring plane (Z axis)
+    if (Math.abs(dz) < 1.8) {
+      const dxy = Math.sqrt((bx-r.x)**2 + (by-r.y)**2);
+      if (dxy < RING_R) {
+        r.used = true;
+        r.el.setAttribute('visible', 'false');
+        score += RING_SCORE;
+        playSFX('aud-sfx-ring');
+        updateHUD();
+        checkAdvance();
+      }
+    }
+  }
+
+  // ── Orbs ───────────────────────────────────────────────────────
+  for (const o of orbs) {
+    if (o.used) continue;
+    if (dist3(bx,by,bz, o.x,o.y,o.z) < ORB_R) {
+      o.used = true;
+      o.el.setAttribute('visible', 'false');
+      score += ORB_SCORE;
+      playSFX('aud-sfx-orb');
+      updateHUD();
+    }
+  }
+
+  // ── Clouds (penalty, 2 s cooldown per cloud) ───────────────────
+  for (const c of clouds) {
+    if (c.penalized) continue;
+    if (dist3(bx,by,bz, c.x,c.y,c.z) < CLOUD_R) {
+      c.penalized = true;
+      score = Math.max(0, score - CLOUD_PEN);
+      playSFX('aud-sfx-cloud');
+      updateHUD();
+      showHitFlash();
+      setTimeout(() => { c.penalized = false; }, 2000);
+    }
+  }
+}
+
+/* ================================================================
+   A-FRAME GAME-TICK COMPONENT
+   Registered on the scene element and called every render frame.
+================================================================ */
+AFRAME.registerComponent('game-tick', {
+  tick(time, delta) {
+    if (gameState !== 'playing') return;
+
+    // Clamp delta to avoid huge jumps after tab-switching
+    const dt = Math.min(delta / 16.67, 3.0);
+
+    // ── Read head orientation ─────────────────────────────────────
+    // getWorldQuaternion gives us the camera's absolute orientation
+    // which in VR = device orientation (head tracking).
+    const q = new THREE.Quaternion();
+    cameraEl.object3D.getWorldQuaternion(q);
+    const euler = new THREE.Euler().setFromQuaternion(q, 'YXZ');
+    const worldYaw   = THREE.MathUtils.radToDeg(euler.y);
+    const worldPitch = THREE.MathUtils.radToDeg(euler.x);
+
+    // Yaw relative to current balloon heading
+    let relYaw = worldYaw - bHeading;
+    while (relYaw >  180) relYaw -= 360;
+    while (relYaw < -180) relYaw += 360;
+
+    const sens = SENS_VALUES[sensIdx];
+
+    // ── Steering (heading turn) ───────────────────────────────────
+    if (Math.abs(relYaw) > DEADZONE) {
+      const turnAmt = Math.sign(relYaw)
+        * Math.min(Math.abs(relYaw) - DEADZONE, MAX_TURN * 10)
+        / 10 * MAX_TURN * sens * dt;
+      bHeading += turnAmt;
+    }
+
+    // ── Altitude ─────────────────────────────────────────────────
+    if (Math.abs(worldPitch) > DEADZONE) {
+      // Pitch up (negative euler.x) = ascend
+      const climbAmt = -Math.sign(worldPitch)
+        * Math.min((Math.abs(worldPitch) - DEADZONE) / 30, 1)
+        * MAX_CLIMB * sens * dt;
+      bPos.y = Math.max(ALT_MIN, Math.min(ALT_MAX, bPos.y + climbAmt));
+    }
+
+    // ── Forward movement ─────────────────────────────────────────
+    const headRad = THREE.MathUtils.degToRad(bHeading);
+    const speed   = FWD_SPEED[level] * dt;
+    bPos.x +=  Math.sin(headRad) * speed;
+    bPos.z += -Math.cos(headRad) * speed;
+
+    // ── Sync transforms ─────────────────────────────────────────
+    rigEl.object3D.position.set(bPos.x, bPos.y, bPos.z);
+    balloonEl.object3D.position.set(bPos.x, bPos.y, bPos.z);
+    balloonEl.object3D.rotation.y = headRad;
+
+    // Gentle idle sway on balloon envelope
+    const sway = Math.sin(time * 0.0009) * 1.2;
+    const envelopeEl = document.getElementById('balloon-envelope');
+    if (envelopeEl) envelopeEl.object3D.rotation.z = THREE.MathUtils.degToRad(sway);
+
+    // ── Collisions ───────────────────────────────────────────────
+    checkCollisions();
+
+    // ── Level 2 completion (traveled past the whole depth) ───────
+    if (level === 2 && -bPos.z > LEVEL_CFG[2].depth + 60) {
+      gameOver();
+    }
+  }
+});
+
+/* ================================================================
+   BUTTON HANDLERS
+================================================================ */
+function wireButtons() {
+  // ── Mute toggle ──────────────────────────────────────────────
+  document.getElementById('btn-mute').addEventListener('click', () => {
+    if (gameState !== 'setup') return;
+    musicMuted = !musicMuted;
+    refreshSetupUI();
+  });
+
+  // ── Sensitivity decrease ─────────────────────────────────────
+  document.getElementById('btn-sens-dec').addEventListener('click', () => {
+    if (gameState !== 'setup') return;
+    sensIdx = Math.max(0, sensIdx - 1);
+    refreshSetupUI();
+  });
+
+  // ── Sensitivity increase ─────────────────────────────────────
+  document.getElementById('btn-sens-inc').addEventListener('click', () => {
+    if (gameState !== 'setup') return;
+    sensIdx = Math.min(SENS_VALUES.length - 1, sensIdx + 1);
+    refreshSetupUI();
+  });
+
+  // ── Start game (iOS 13+ motion-permission gate) ───────────────
+  //
+  // iOS 13+ silently returns zero for DeviceOrientationEvent unless the
+  // page calls DeviceOrientationEvent.requestPermission() from inside a
+  // user-gesture handler (which a gaze-fuse click qualifies as).
+  //
+  // Decision tree:
+  //   • API exists (iOS 13+) → request permission
+  //       granted  → launch game
+  //       denied   → stay on setup screen, show inline error message
+  //       error    → fall back to launch (shouldn't happen in practice)
+  //   • API absent (Android, desktop, iOS ≤ 12) → launch directly
+  //     The existing mouse-drag look-controls are unaffected either way.
+  document.getElementById('btn-start').addEventListener('click', () => {
+    if (gameState !== 'setup') return;
+
+    function launchGame() {
+      // Clear any previous denial message before entering gameplay
+      document.getElementById('ios-perm-msg').setAttribute('text', 'value', '');
+      score = 0;
+      startLevel(1);
+    }
+
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // ── iOS 13+ path ─────────────────────────────────────────
+      DeviceOrientationEvent.requestPermission()
+        .then(state => {
+          if (state === 'granted') {
+            launchGame();
+          } else {
+            // User tapped "Don't Allow" — surface a clear message and stay
+            document.getElementById('ios-perm-msg').setAttribute(
+              'text', 'value',
+              'Motion access denied.\nReload the page and tap Allow to play.'
+            );
+          }
+        })
+        .catch(err => {
+          // requestPermission threw unexpectedly — log and fall through
+          console.warn('DeviceOrientationEvent.requestPermission() error:', err);
+          launchGame();
+        });
+    } else {
+      // ── Android / desktop / iOS ≤ 12 path ────────────────────
+      launchGame();
+    }
+  });
+
+  // ── Play again ───────────────────────────────────────────────
+  document.getElementById('btn-play-again').addEventListener('click', () => {
+    if (gameState !== 'gameover') return;
+    score = 0;
+    startLevel(1);
+  });
+
+  // ── Back to settings ─────────────────────────────────────────
+  document.getElementById('btn-to-setup').addEventListener('click', () => {
+    if (gameState !== 'gameover') return;
+    startSetup();
+  });
+}
+
+/* ================================================================
+   BOOT
+================================================================ */
+sceneEl.addEventListener('loaded', () => {
+  // Attach game-tick to scene
+  sceneEl.setAttribute('game-tick', '');
+
+  // Wire up menu buttons
+  wireButtons();
+
+  // Dismiss HTML loading overlay
+  const loadDiv = document.getElementById('loading-screen');
+  loadDiv.classList.add('fade-out');
+  setTimeout(() => loadDiv.style.display = 'none', 700);
+
+  // Kick off flash screen
+  startFlash();
+});
+
+/* ================================================================
+   MOBILE: unlock audio on first touch (browsers require a gesture)
+================================================================ */
+document.addEventListener('touchend', function unlockAudio() {
+  ['aud-music-l1','aud-music-l2','aud-sfx-ring','aud-sfx-orb',
+   'aud-sfx-cloud','aud-sfx-level'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.play().then(() => el.pause()).catch(() => {});
+  });
+  document.removeEventListener('touchend', unlockAudio);
+}, { once: true });
+  </script>
+
+</body>
+</html>

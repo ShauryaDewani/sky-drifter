@@ -1,0 +1,76 @@
+=====================================================================
+  SKY DRIFTER — Texture Asset List
+  Drop your files into this folder (assets/textures/).
+  Then uncomment the matching <img> tags in index.html
+  inside the <a-assets> block, and update the material
+  src attributes on each geometry element.
+=====================================================================
+
+FILE               USED ON              SUGGESTED SOURCE / SEARCH TERM
+─────────────────────────────────────────────────────────────────────
+balloon.png        Balloon envelope     Poly Haven → "fabric" or "striped cloth"
+                   (a-sphere)           ambientCG  → Fabric001, Fabric004
+                                        Tip: a 512×512 or 1024×1024 seamless PNG
+                                        works great. Use a warm red/orange pattern.
+
+basket.jpg         Basket (a-box)       Poly Haven → "wicker" or "rattan"
+                                        ambientCG  → Wood049, Wicker001
+                                        512×512 tileable JPEG is fine.
+
+ring.png           Rings (a-torus)      Poly Haven → "metal" or "gold trim"
+                                        ambientCG  → Metal032, Gold001
+                                        A 256×64 strip texture looks great on a torus.
+
+orb.png            Orbs (a-sphere)      Any glowing/plasma texture.
+                                        Kenney.nl → "particle atlas" sprites
+                                        Or use a solid emissive color (no texture needed).
+
+cloud.png          Cloud spheres        A white/grey fluffy cloud alpha-map works well.
+                                        freepik.com or opengameart.org → "cloud sprite"
+                                        Set material transparent: true, opacity: ~0.85.
+
+ground-meadow.jpg  Level 1 ground       Poly Haven → "grass field" or "meadow"
+                   (a-plane, L1)        ambientCG  → Ground037, Grass001
+                                        Use a 1K tileable texture; set repeat="40 80"
+                                        in the material attribute.
+
+ground-canyon.jpg  Level 2 ground       Poly Haven → "red rock" or "desert soil"
+                   (a-plane, L2)        ambientCG  → Ground025, Rock032
+                                        Same repeat settings as above.
+
+sky-day.jpg        Level 1 skybox       Poly Haven → "sky" (equirectangular panorama)
+                   (a-sky, L1)          hdri.co    → any sunny day 8K JPG
+                                        Must be an equirectangular (360°) image.
+                                        Use on <a-sky src="#tex-sky-l1">.
+
+sky-dusk.jpg       Level 2 skybox       Poly Haven → "sunset" or "golden hour" HDRI
+                   (a-sky, L2)          hdri.co    → warm dusk panorama
+                                        Same format as above (equirectangular).
+
+=====================================================================
+HOW TO WIRE A TEXTURE IN index.html
+=====================================================================
+
+1. Uncomment the <img> tag in <a-assets>:
+       <img id="tex-balloon" src="assets/textures/balloon.png">
+
+2. On the geometry element, replace the color="" attribute with:
+       material="src: #tex-balloon; roughness: 0.6; metalness: 0.05"
+
+3. For the sky, replace color="" on <a-sky>:
+       <a-sky src="#tex-sky-l1"></a-sky>
+   (and set it back in JS with setAttribute('src', '#tex-sky-l2')
+    instead of setAttribute('color', ...) when switching levels)
+
+4. For the ground planes, add the repeat parameter:
+       material="src: #tex-ground-l1; repeat: 40 80; roughness: 1.0"
+
+=====================================================================
+FREE CC0 TEXTURE SOURCES
+=====================================================================
+  • https://polyhaven.com/textures        (CC0, 1K/2K/4K, PBR-ready)
+  • https://ambientcg.com                 (CC0, seamless, all categories)
+  • https://kenney.nl/assets              (CC0, game-ready sprites)
+  • https://cc0textures.com               (CC0, archived older library)
+  • https://opengameart.org               (various CC licenses, check each)
+=====================================================================

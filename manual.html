@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sky Drifter — Player Manual</title>
+  <style>
+    /* ── Reset & base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #08111f;
+      color: #cce0ff;
+      line-height: 1.7;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .page { max-width: 860px; margin: 0 auto; padding: 2rem 1.4rem 4rem; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      text-align: center;
+      padding: 3rem 0 2.2rem;
+      border-bottom: 1px solid #1e3555;
+      margin-bottom: 2.4rem;
+    }
+    header h1 {
+      font-size: 3rem; letter-spacing: 0.15em;
+      color: #FFD700; text-shadow: 0 0 24px #FFD70066;
+    }
+    header .sub {
+      margin-top: 0.5rem; color: #7aaadd; font-size: 0.95rem;
+    }
+    header .badge {
+      display: inline-block; margin-top: 1rem;
+      padding: 0.3rem 1.1rem;
+      background: #FFD70022; border: 1px solid #FFD70066;
+      border-radius: 999px; color: #FFD700; font-size: 0.82rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Section headings ───────────────────────────────────── */
+    h2 {
+      font-size: 1.35rem; color: #FFD700;
+      margin: 2.4rem 0 0.8rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid #1e3555;
+      letter-spacing: 0.06em;
+    }
+    h3 {
+      font-size: 1.05rem; color: #aaddff;
+      margin: 1.4rem 0 0.5rem;
+    }
+
+    /* ── Body text ──────────────────────────────────────────── */
+    p { margin-bottom: 0.85rem; }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 0.85rem; }
+    li { margin-bottom: 0.35rem; }
+    a  { color: #5bc8ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, kbd {
+      font-family: 'Consolas', 'Courier New', monospace;
+      background: #0d1f35; border: 1px solid #1e3555;
+      padding: 0.05em 0.4em; border-radius: 4px;
+      font-size: 0.9em; color: #aaf0ff;
+    }
+    strong { color: #fff; }
+
+    /* ── Callout boxes ──────────────────────────────────────── */
+    .callout {
+      border-left: 3px solid #FFD700;
+      background: #0d1e36; padding: 0.85rem 1.1rem;
+      border-radius: 0 6px 6px 0; margin: 1rem 0;
+    }
+    .callout.tip   { border-color: #44ff88; }
+    .callout.warn  { border-color: #ff9944; }
+    .callout .label {
+      font-size: 0.74rem; letter-spacing: 0.08em;
+      font-weight: 700; text-transform: uppercase;
+      color: #FFD700; margin-bottom: 0.3rem;
+    }
+    .callout.tip  .label { color: #44ff88; }
+    .callout.warn .label { color: #ff9944; }
+
+    /* ── Control diagram table ──────────────────────────────── */
+    table {
+      width: 100%; border-collapse: collapse;
+      margin: 1rem 0; font-size: 0.93rem;
+    }
+    th {
+      text-align: left; color: #FFD700;
+      padding: 0.55rem 0.8rem;
+      background: #0d1e36; border-bottom: 1px solid #1e3555;
+    }
+    td {
+      padding: 0.5rem 0.8rem;
+      border-bottom: 1px solid #101e2e;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #080f1a; }
+
+    /* ── Scoring panel ──────────────────────────────────────── */
+    .score-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 0.9rem; margin: 1rem 0;
+    }
+    .score-card {
+      background: #0d1e36; border: 1px solid #1e3555;
+      border-radius: 8px; padding: 1rem 1.1rem;
+      text-align: center;
+    }
+    .score-card .icon { font-size: 2rem; margin-bottom: 0.4rem; }
+    .score-card .pts  { font-size: 1.5rem; font-weight: 700; }
+    .score-card .pts.pos { color: #44ff88; }
+    .score-card .pts.neg { color: #ff6644; }
+    .score-card .desc { font-size: 0.83rem; color: #7aaadd; margin-top: 0.2rem; }
+
+    /* ── File tree ──────────────────────────────────────────── */
+    pre {
+      background: #060e1a; border: 1px solid #1e3555;
+      border-radius: 6px; padding: 1.1rem 1.3rem;
+      overflow-x: auto; font-size: 0.88rem;
+      line-height: 1.65; color: #aaf0ff;
+      margin: 0.9rem 0;
+    }
+
+    /* ── Steps (numbered) ───────────────────────────────────── */
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps li {
+      counter-increment: step;
+      display: flex; gap: 1rem; margin-bottom: 1rem;
+    }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0; width: 2rem; height: 2rem;
+      background: #FFD700; color: #000;
+      font-weight: 700; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.88rem;
+    }
+    .steps li > div { padding-top: 0.2rem; }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    footer {
+      text-align: center; margin-top: 3.5rem;
+      padding-top: 1.5rem; border-top: 1px solid #1e3555;
+      color: #3a5570; font-size: 0.83rem;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header>
+    <h1>SKY DRIFTER</h1>
+    <p class="sub">Player Manual &amp; Setup Guide</p>
+    <span class="badge">CMPT 461 · Mobile VR · Trinity Western University</span>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       1. OVERVIEW
+  ══════════════════════════════════════════════════════════ -->
+  <h2>1 · Overview</h2>
+  <p>
+    <strong>Sky Drifter</strong> is a first-person mobile VR hot-air balloon game
+    built with <a href="https://aframe.io" target="_blank">A-Frame 1.6</a>.
+    Your balloon drifts forward automatically — use your head to steer.
+    Fly through glowing rings and collect orbs to rack up points, and
+    dodge the clouds hiding along the way.
+  </p>
+  <p>The game spans two hand-crafted levels:</p>
+  <ul>
+    <li><strong>Level 1 — Sunny Meadows:</strong> open daytime skies, rolling hills,
+        gold rings, and cyan orbs. Advance by clearing 65 % of the rings.</li>
+    <li><strong>Level 2 — Sunset Canyon:</strong> warm dusk lighting, towering rock
+        spires, tighter corridors, and a faster balloon. Runs until you exit
+        the canyon (or time out on rings).</li>
+  </ul>
+  <p>Your <strong>high score</strong> is saved in <code>localStorage</code>
+     and persists between sessions.</p>
+
+  <!-- ══════════════════════════════════════════════════════════
+       2. SYSTEM REQUIREMENTS
+  ══════════════════════════════════════════════════════════ -->
+  <h2>2 · System Requirements</h2>
+  <table>
+    <thead><tr><th>Platform</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr><td>Mobile VR (recommended)</td>
+          <td>Android / iOS smartphone + Google Cardboard v2 headset; Chrome or Firefox with WebXR support</td></tr>
+      <tr><td>Desktop (development)</td>
+          <td>Any modern browser (Chrome 90+, Firefox 90+, Edge 90+); mouse drag to look around</td></tr>
+      <tr><td>WebGL</td>
+          <td>Required — version 2.0 preferred, 1.0 acceptable</td></tr>
+      <tr><td>Internet</td>
+          <td>Required on first load (A-Frame CDN); then works offline if cached</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════════
+       3. HOW TO PLAY
+  ══════════════════════════════════════════════════════════ -->
+  <h2>3 · How to Play</h2>
+
+  <h3>3.1 Controls</h3>
+  <table>
+    <thead><tr><th>Action</th><th>Mobile VR (Cardboard)</th><th>Desktop Fallback</th></tr></thead>
+    <tbody>
+      <tr><td>Turn left / right</td><td>Tilt head left or right</td><td>Click-drag mouse horizontally</td></tr>
+      <tr><td>Ascend</td><td>Tilt head up</td><td>Click-drag mouse up</td></tr>
+      <tr><td>Descend</td><td>Tilt head down</td><td>Click-drag mouse down</td></tr>
+      <tr><td>Select menu button</td><td>Gaze at button, hold 1.5 s</td><td>Mouse-over, left-click</td></tr>
+      <tr><td>Speed</td><td colspan="2">Automatic — increases in Level 2</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <div class="label">Tip — Dead Zone</div>
+    A ±7° dead zone around straight-ahead prevents micro-drift.
+    Small movements keep you on course; larger deliberate tilts steer.
+  </div>
+
+  <h3>3.2 Scoring</h3>
+  <div class="score-grid">
+    <div class="score-card">
+      <div class="icon">🏅</div>
+      <div class="pts pos">+10</div>
+      <div class="desc">Fly through a <strong>Ring</strong></div>
+    </div>
+    <div class="score-card">
+      <div class="icon">✨</div>
+      <div class="pts pos">+5</div>
+      <div class="desc">Collect an <strong>Orb</strong></div>
+    </div>
+    <div class="score-card">
+      <div class="icon">☁️</div>
+      <div class="pts neg">−15</div>
+      <div class="desc">Hit a <strong>Cloud</strong> (2 s penalty cooldown)</div>
+    </div>
+  </div>
+
+  <h3>3.3 Screen Flow</h3>
+  <ol>
+    <li><strong>Flash Screen</strong> — Shows game title and student credentials for 5 s.</li>
+    <li><strong>Settings Screen</strong> — Toggle music, adjust sensitivity, view best score.</li>
+    <li><strong>Level 1 — Sunny Meadows</strong> — Clear 65 % of rings to advance.</li>
+    <li><strong>Level-Up Overlay</strong> — 3-second countdown before Level 2 begins.</li>
+    <li><strong>Level 2 — Sunset Canyon</strong> — Fly through to the end of the canyon.</li>
+    <li><strong>Game Over</strong> — Final score, high-score check; play again or back to settings.</li>
+  </ol>
+
+  <!-- ══════════════════════════════════════════════════════════
+       4. SETTINGS
+  ══════════════════════════════════════════════════════════ -->
+  <h2>4 · Settings</h2>
+  <table>
+    <thead><tr><th>Setting</th><th>Options</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Music</td><td>ON / OFF</td><td>Mutes background music only; sound effects always play</td></tr>
+      <tr><td>Sensitivity</td><td>Very Low · Low · <strong>Medium</strong> · High · Very High</td>
+          <td>Controls how strongly head tilt maps to steering. Adjust for your comfort and the headset you're using.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════════
+       5. PROJECT SETUP (developer)
+  ══════════════════════════════════════════════════════════ -->
+  <h2>5 · Project Setup</h2>
+
+  <h3>5.1 File Structure</h3>
+<pre>
+sky-drifter/
+├── index.html              ← entire game (single-file A-Frame)
+├── manual.html             ← this document
+├── README.md               ← GitHub Pages deployment guide
+└── assets/
+    ├── textures/
+    │   ├── ASSET_LIST.txt  ← what to drop in here
+    │   ├── balloon.png     *
+    │   ├── basket.jpg      *
+    │   ├── ring.png        *
+    │   ├── orb.png         *
+    │   ├── cloud.png       *
+    │   ├── ground-meadow.jpg *
+    │   ├── ground-canyon.jpg *
+    │   ├── sky-day.jpg     *
+    │   └── sky-dusk.jpg    *
+    └── audio/
+        ├── ASSET_LIST.txt  ← what to drop in here
+        ├── music-day.mp3   *
+        ├── music-dusk.mp3  *
+        ├── sfx-ring.mp3    *
+        ├── sfx-orb.mp3     *
+        ├── sfx-cloud.mp3   *
+        └── sfx-levelup.mp3 *
+
+* = placeholder; see assets/*/ASSET_LIST.txt for sources
+</pre>
+
+  <h3>5.2 Running Locally</h3>
+  <div class="callout warn">
+    <div class="label">Important</div>
+    Browsers block local audio/texture loading when you open
+    <code>index.html</code> directly (the <code>file://</code> protocol).
+    You must serve the folder over HTTP, even locally.
+  </div>
+  <p>Pick any method below:</p>
+  <ul>
+    <li><strong>VS Code + Live Server extension:</strong> right-click <code>index.html</code>
+        → <em>Open with Live Server</em>.</li>
+    <li><strong>Python 3:</strong> <code>cd sky-drifter &amp;&amp; python -m http.server 8080</code>,
+        then open <code>http://localhost:8080</code>.</li>
+    <li><strong>Node.js (npx):</strong> <code>npx serve .</code></li>
+  </ul>
+
+  <h3>5.3 Testing on a Physical Phone (same Wi-Fi)</h3>
+  <ol class="steps">
+    <li><div>Start the local server as above. Note your machine's local IP
+            (e.g. <code>192.168.1.42</code>).</div></li>
+    <li><div>On the phone, open <code>http://192.168.1.42:8080</code> in Chrome.</div></li>
+    <li><div>Tap the <strong>VR goggles icon</strong> in the bottom-right corner of the
+            A-Frame canvas to enter Cardboard stereo mode.</div></li>
+    <li><div>Insert phone into headset. Tilt your head to steer!</div></li>
+  </ol>
+
+  <!-- ══════════════════════════════════════════════════════════
+       6. DEPLOYING TO GITHUB PAGES
+  ══════════════════════════════════════════════════════════ -->
+  <h2>6 · Deploying to GitHub Pages</h2>
+  <ol class="steps">
+    <li>
+      <div>
+        <strong>Create a GitHub repository</strong> (public).<br>
+        <code>https://github.com/&lt;your-username&gt;/sky-drifter</code>
+      </div>
+    </li>
+    <li>
+      <div>
+        <strong>Push this folder</strong> to the repository root:
+<pre>
+git init
+git add .
+git commit -m "Initial Sky Drifter commit"
+git remote add origin https://github.com/&lt;your-username&gt;/sky-drifter.git
+git push -u origin main
+</pre>
+      </div>
+    </li>
+    <li>
+      <div>
+        In the repository, go to
+        <strong>Settings → Pages → Source</strong>.<br>
+        Set branch to <code>main</code>, folder to <code>/ (root)</code>,
+        then click <strong>Save</strong>.
+      </div>
+    </li>
+    <li>
+      <div>
+        Wait ~1 minute. Your game will be live at:<br>
+        <code>https://&lt;your-username&gt;.github.io/sky-drifter/</code>
+      </div>
+    </li>
+    <li>
+      <div>
+        <strong>Share the link</strong> with anyone — they open it in Chrome
+        on their phone, tap the VR icon, and drop it in a Cardboard headset.
+      </div>
+    </li>
+  </ol>
+
+  <div class="callout tip">
+    <div class="label">Audio on GitHub Pages</div>
+    Browsers auto-block audio until the user interacts with the page.
+    The game already handles this: it silently unlocks all audio tracks
+    on the first touch event. No extra configuration needed.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       7. ADDING YOUR OWN ASSETS
+  ══════════════════════════════════════════════════════════ -->
+  <h2>7 · Adding Your Own Assets</h2>
+
+  <h3>Textures</h3>
+  <p>
+    All textures are referenced in <code>index.html</code> inside the
+    <code>&lt;a-assets&gt;</code> block but commented out.
+    Once you have the image files:
+  </p>
+  <ol>
+    <li>Drop them into <code>assets/textures/</code>.</li>
+    <li>In <code>index.html</code>, find the <code>&lt;!-- TEXTURES --&gt;</code>
+        block and uncomment each <code>&lt;img&gt;</code> tag.</li>
+    <li>On each geometry element (e.g. <code>&lt;a-sphere&gt;</code>),
+        change the <code>color</code> attribute to
+        <code>material="src: #tex-balloon"</code> (or whichever id).</li>
+  </ol>
+  <p>Recommended free sources (all CC0):</p>
+  <ul>
+    <li><a href="https://polyhaven.com/textures" target="_blank">Poly Haven</a> — high-quality 1K/2K PBR textures</li>
+    <li><a href="https://ambientcg.com" target="_blank">ambientCG</a> — seamless tileable surfaces</li>
+    <li><a href="https://kenney.nl/assets" target="_blank">Kenney.nl</a> — game-ready sprites and panels</li>
+  </ul>
+
+  <h3>Audio</h3>
+  <p>
+    Drop <code>.mp3</code> files into <code>assets/audio/</code>.
+    The filenames must match exactly what is listed in the
+    <code>&lt;a-assets&gt;</code> block (see <code>assets/audio/ASSET_LIST.txt</code>).
+  </p>
+  <p>Recommended free sources:</p>
+  <ul>
+    <li><a href="https://freemusicarchive.org" target="_blank">Free Music Archive</a> — CC-licensed ambient/chill tracks</li>
+    <li><a href="https://freesound.org" target="_blank">freesound.org</a> — community SFX library (CC)</li>
+    <li><a href="https://www.zapsplat.com" target="_blank">Zapsplat</a> — professional SFX (free with attribution)</li>
+    <li><a href="https://opengameart.org" target="_blank">OpenGameArt.org</a> — all game-ready, clearly licensed</li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════════════════
+       8. RUBRIC FEATURE MAP
+  ══════════════════════════════════════════════════════════ -->
+  <h2>8 · Rubric Feature Map</h2>
+  <table>
+    <thead><tr><th>Required Feature</th><th>Implementation</th></tr></thead>
+    <tbody>
+      <tr><td>Flash screen with credentials</td>
+          <td>5-second auto-advancing overlay (<code>id="screen-flash"</code>) showing name, student ID, course, institution</td></tr>
+      <tr><td>Setup screen — mute music toggle</td>
+          <td><code>id="btn-mute"</code> toggles <code>musicMuted</code>; SFX always plays</td></tr>
+      <tr><td>Setup screen — sensitivity slider</td>
+          <td>◀ / ▶ buttons cycle through 5 sensitivity levels</td></tr>
+      <tr><td>At least 2 levels</td>
+          <td>Level 1 "Sunny Meadows" + Level 2 "Sunset Canyon" with distinct environments</td></tr>
+      <tr><td>Background music (mutable)</td>
+          <td>Separate MP3 per level; respects <code>musicMuted</code> flag</td></tr>
+      <tr><td>Sound effects</td>
+          <td>Ring collect, orb collect, cloud hit, level-up — always plays</td></tr>
+      <tr><td>Always-visible HUD</td>
+          <td>Camera-child entity (<code>id="hud"</code>) with score, level name, best score</td></tr>
+      <tr><td>Head-tilt controls</td>
+          <td><code>game-tick</code> component reads <code>getWorldQuaternion</code> every frame; YXZ Euler → yaw/pitch</td></tr>
+      <tr><td>Gaze-fuse for menus</td>
+          <td><code>&lt;a-cursor fuse="true" fuse-timeout="1500"&gt;</code>; disabled during gameplay</td></tr>
+      <tr><td>Stereoscopic mobile VR</td>
+          <td>A-Frame's built-in WebXR / Cardboard stereo; VR button always shown</td></tr>
+      <tr><td>Custom textured objects</td>
+          <td>Balloon (sphere + box + ropes), rings (torus), orbs (sphere + emissive), clouds (multi-sphere), rock spires (cone-cylinder)</td></tr>
+      <tr><td>Collision detection</td>
+          <td>Distance + plane-crossing checks per tick: ring pass-through (+pts), orb capture (+pts), cloud overlap (−pts)</td></tr>
+      <tr><td><em>Bonus</em> — Particle trail</td>
+          <td><code>aframe-particle-system-component</code> burner flame trail below basket</td></tr>
+      <tr><td><em>Bonus</em> — High score localStorage</td>
+          <td><code>localStorage.getItem/setItem('skyDrifterHigh')</code> persists between sessions</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════════
+       9. KNOWN LIMITATIONS / NOTES
+  ══════════════════════════════════════════════════════════ -->
+  <h2>9 · Known Limitations &amp; Notes</h2>
+  <ul>
+    <li><strong>iOS Safari:</strong> WebXR/Cardboard support requires iOS 15.4+ and the
+        <em>WebXR Viewer</em> app for best results.</li>
+    <li><strong>Audio autoplay:</strong> All browsers require a user gesture before
+        playing audio. The game unlocks tracks on first touch automatically.</li>
+    <li><strong>CORS for assets:</strong> Textures and audio must be served from the
+        same origin (or with correct CORS headers). Use a local server — never
+        open <code>index.html</code> via <code>file://</code>.</li>
+    <li><strong>Particle system CDN:</strong> The trail requires
+        <code>aframe-particle-system-component</code> from unpkg. If that CDN
+        is unavailable offline, the balloon still works — only the trail disappears.</li>
+    <li><strong>Performance:</strong> Keep texture sizes ≤ 1024 × 1024 px for smooth
+        60 fps on mid-range phones.</li>
+  </ul>
+
+  <footer>
+    Sky Drifter · CMPT 461 Mobile VR · Trinity Western University<br>
+    Built with <a href="https://aframe.io">A-Frame 1.6</a> ·
+    <a href="index.html">Play the game →</a>
+  </footer>
+
+</div>
+</body>
+</html>
