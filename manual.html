@@ -165,7 +165,7 @@
   <h2>1 · Overview</h2>
   <p>
     <strong>Sky Drifter</strong> is a first-person mobile VR hot-air balloon game
-    built with <a href="https://aframe.io" target="_blank">A-Frame 1.6</a>.
+    built with <a href="https://aframe.io" target="_blank">A-Frame 1.7.1</a>.
     Your balloon drifts forward automatically — use your head to steer.
     Fly through glowing rings and collect orbs to rack up points, and
     dodge the clouds hiding along the way.
@@ -449,7 +449,7 @@ git push -u origin main
       <tr><td>Collision detection</td>
           <td>Distance + plane-crossing checks per tick: ring pass-through (+pts), orb capture (+pts), cloud overlap (−pts)</td></tr>
       <tr><td><em>Bonus</em> — Particle trail</td>
-          <td><code>aframe-particle-system-component</code> burner flame trail below basket</td></tr>
+          <td>Two stacked <code>&lt;a-sphere&gt;</code> elements with A-Frame <code>animation__scale</code> and <code>animation__opacity</code> loops; <code>emissive</code> flat-shader for glow — no external library required</td></tr>
       <tr><td><em>Bonus</em> — High score localStorage</td>
           <td><code>localStorage.getItem/setItem('skyDrifterHigh')</code> persists between sessions</td></tr>
     </tbody>
@@ -467,16 +467,16 @@ git push -u origin main
     <li><strong>CORS for assets:</strong> Textures and audio must be served from the
         same origin (or with correct CORS headers). Use a local server — never
         open <code>index.html</code> via <code>file://</code>.</li>
-    <li><strong>Particle system CDN:</strong> The trail requires
-        <code>aframe-particle-system-component</code> from unpkg. If that CDN
-        is unavailable offline, the balloon still works — only the trail disappears.</li>
+    <li><strong>Burner glow:</strong> The flame effect uses only A-Frame's built-in
+        <code>animation</code> component — no external library is required and
+        no CDN dependency can break it.</li>
     <li><strong>Performance:</strong> Keep texture sizes ≤ 1024 × 1024 px for smooth
         60 fps on mid-range phones.</li>
   </ul>
 
   <footer>
     Sky Drifter · CMPT 461 Mobile VR · Trinity Western University<br>
-    Built with <a href="https://aframe.io">A-Frame 1.6</a> ·
+    Built with <a href="https://aframe.io">A-Frame 1.7.1</a> ·
     <a href="index.html">Play the game →</a>
   </footer>
 

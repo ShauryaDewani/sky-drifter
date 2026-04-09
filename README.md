@@ -2,7 +2,7 @@
 
 **CMPT 461 — Mobile VR · Trinity Western University**
 
-A first-person hot-air balloon VR game built with [A-Frame 1.6](https://aframe.io).
+A first-person hot-air balloon VR game built with [A-Frame 1.7.1](https://aframe.io).
 Your balloon drifts forward automatically — tilt your head to steer, dodge clouds,
 collect orbs, and fly through rings across two hand-crafted levels.
 
@@ -135,8 +135,7 @@ Recommended free CC0 sources: [Poly Haven](https://polyhaven.com/textures),
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| [A-Frame](https://aframe.io) | 1.6.0 | WebVR framework |
-| [aframe-particle-system-component](https://github.com/IdeaSpaceVR/aframe-particle-system-component) | 1.1.x | Burner flame trail |
+| [A-Frame](https://aframe.io) | 1.7.1 | WebVR framework |
 
 ---
 
