@@ -593,7 +593,8 @@ let highScore    = parseInt(localStorage.getItem('skyDrifterHigh') || '0', 10);
 
 // Balloon world-space position
 const bPos = { x: 0, y: 5, z: 0 };
-let boundaryNudge = 0;   // frames remaining to nudge balloon back from world edge
+let boundaryNudge    = 0;   // frames remaining to nudge balloon back from world edge
+let groundHitCooldown = 0;  // ms timestamp after which ground-hit can trigger again
 
 // Active objects: {el, x, y, z, used, penalized}
 let rings  = [];
@@ -772,34 +773,58 @@ function spawnObjects(lvl) {
   const cfg   = LEVEL_CFG[lvl];
   const depth = cfg.depth;
 
-  // Rings — evenly spaced along depth with random XY offsets
+  // Separation clearance: ring/orb must be at least this far from any cloud
+  const SEP = CLOUD_R + RING_R + 5;   // ~12 units
+
+  // Helper: true if (x,y,z) is too close to any already-placed cloud
+  function tooCloseToCloud(x, y, z) {
+    return clouds.some(c => dist3(x, y, z, c.x, c.y, c.z) < SEP);
+  }
+
+  // ── Clouds first — so rings/orbs can check against them ──────────
+  for (let i = 0; i < cfg.clouds; i++) {
+    const z  = rnd(-40, -depth);
+    const x  = rnd(-22, 22);
+    const y  = rnd(7, 24);
+    const el = makeCloud(x, y, z, cfg.cloudColor);
+    cloudsCtEl.appendChild(el);
+    clouds.push({ el, x, y, z, penalized: false });
+  }
+
+  // ── Rings — evenly spaced in Z, random XY with cloud separation ──
+  // Altitude clamped to [ALT_MIN+4, ALT_MAX-4] so rings never clip
+  // into the ground or the sky ceiling.
+  const RING_Y_MIN = ALT_MIN + 4;   // 5.5
+  const RING_Y_MAX = ALT_MAX - 4;   // 34
   for (let i = 0; i < cfg.rings; i++) {
-    const z  = -30 - i * (depth / cfg.rings);
-    const x  = rnd(-14, 14);
-    const y  = rnd(3, 19);
+    const z = -30 - i * (depth / cfg.rings);
+    let x = rnd(-14, 14);
+    let y = rnd(RING_Y_MIN, RING_Y_MAX);
+    // Retry up to 20 times to find a cloud-clear position
+    for (let attempt = 0; attempt < 20 && tooCloseToCloud(x, y, z); attempt++) {
+      x = rnd(-14, 14);
+      y = rnd(RING_Y_MIN, RING_Y_MAX);
+    }
     const el = makeRing(x, y, z, cfg.ringColor);
     ringsCtEl.appendChild(el);
     rings.push({ el, x, y, z, used: false });
   }
 
-  // Orbs — scattered randomly across playfield
+  // ── Orbs — scattered randomly with cloud separation ───────────────
+  const ORB_Y_MIN = ALT_MIN + 4;   // 5.5
+  const ORB_Y_MAX = ALT_MAX - 4;   // 34
   for (let i = 0; i < cfg.orbs; i++) {
-    const z  = rnd(-25, -depth);
-    const x  = rnd(-18, 18);
-    const y  = rnd(2, 22);
+    let z = rnd(-25, -depth);
+    let x = rnd(-18, 18);
+    let y = rnd(ORB_Y_MIN, ORB_Y_MAX);
+    for (let attempt = 0; attempt < 20 && tooCloseToCloud(x, y, z); attempt++) {
+      z = rnd(-25, -depth);
+      x = rnd(-18, 18);
+      y = rnd(ORB_Y_MIN, ORB_Y_MAX);
+    }
     const el = makeOrb(x, y, z, cfg.orbColor);
     orbsCtEl.appendChild(el);
     orbs.push({ el, x, y, z, used: false });
-  }
-
-  // Clouds
-  for (let i = 0; i < cfg.clouds; i++) {
-    const z   = rnd(-40, -depth);
-    const x   = rnd(-22, 22);
-    const y   = rnd(7, 24);
-    const el  = makeCloud(x, y, z, cfg.cloudColor);
-    cloudsCtEl.appendChild(el);
-    clouds.push({ el, x, y, z, penalized: false });
   }
 
   // Level 2 only: rock spires lining canyon floor
@@ -996,14 +1021,20 @@ function checkCollisions() {
   }
 
   // ── Clouds (penalty, 2 s cooldown per cloud) ───────────────────
+  // playSFX() already null-checks the element; the outer try/catch
+  // ensures a missing audio file never silently swallows the score/flash.
   for (const c of clouds) {
     if (c.penalized) continue;
     if (dist3(bx,by,bz, c.x,c.y,c.z) < CLOUD_R) {
       c.penalized = true;
-      score = Math.max(0, score - CLOUD_PEN);
-      playSFX('aud-sfx-cloud');
-      updateHUD();
-      showHitFlash();
+      try {
+        score = Math.max(0, score - CLOUD_PEN);
+        playSFX('aud-sfx-cloud');
+        updateHUD();
+        showHitFlash();
+      } catch(e) {
+        console.warn('Cloud collision handler error:', e);
+      }
       setTimeout(() => { c.penalized = false; }, 2000);
     }
   }
@@ -1040,6 +1071,19 @@ AFRAME.registerComponent('game-tick', {
       const sens = SENS_VALUES[sensIdx];
       bPos.y += (pitch - Math.sign(pitch) * 0.1) * MAX_CLIMB * sens * dt;
       bPos.y = Math.max(ALT_MIN, Math.min(ALT_MAX, bPos.y));
+    }
+
+    // ── Ground collision ─────────────────────────────────────────
+    // Trigger when the balloon dips to within 0.5 units of ALT_MIN.
+    // 2-second cooldown (stored as an absolute timestamp) prevents
+    // the penalty firing every frame while the player is near the floor.
+    if (bPos.y <= ALT_MIN + 0.5 && time > groundHitCooldown) {
+      groundHitCooldown = time + 2000;
+      score = Math.max(0, score - CLOUD_PEN);
+      playSFX('aud-sfx-cloud');
+      updateHUD();
+      showHitFlash();
+      bPos.y = ALT_MIN + 5;   // bounce back up so player can recover
     }
 
     // ── World boundary clamping ───────────────────────────────────
