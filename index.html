@@ -165,9 +165,10 @@
     ========================================================== -->
     <a-entity id="balloon-entity" position="0 5 0">
 
-      <!-- Envelope (sphere) -->
+      <!-- Envelope (sphere) — y:+2 keeps bottom edge 0.65 m above camera;
+           z:+0.3 shifts it behind the player so the forward view is clear -->
       <a-sphere id="balloon-envelope"
-                position="0 1.25 0" radius="1.35"
+                position="0 2.0 0.3" radius="1.35"
                 color="#E84040"
                 shadow="cast: true; receive: false"
                 material="roughness: 0.55; metalness: 0.08">
@@ -190,15 +191,16 @@
              material="roughness: 1.0; metalness: 0.0">
       </a-box>
 
-      <!-- Suspension ropes (4 thin cylinders) -->
-      <a-cylinder position="-0.36 0.33 -0.36" radius="0.028" height="1.5"
-                  color="#5c4a00" rotation=" 10  45  10"></a-cylinder>
-      <a-cylinder position=" 0.36 0.33 -0.36" radius="0.028" height="1.5"
-                  color="#5c4a00" rotation=" 10 -45 -10"></a-cylinder>
-      <a-cylinder position="-0.36 0.33  0.36" radius="0.028" height="1.5"
-                  color="#5c4a00" rotation="-10 -45  10"></a-cylinder>
-      <a-cylinder position=" 0.36 0.33  0.36" radius="0.028" height="1.5"
-                  color="#5c4a00" rotation="-10  45 -10"></a-cylinder>
+      <!-- Suspension ropes — centres raised and lengthened to reach
+           the envelope now at y:+2 z:+0.3 from the entity origin -->
+      <a-cylinder position="-0.36 0.65 -0.18" radius="0.028" height="2.1"
+                  color="#5c4a00" rotation=" 12  40  10"></a-cylinder>
+      <a-cylinder position=" 0.36 0.65 -0.18" radius="0.028" height="2.1"
+                  color="#5c4a00" rotation=" 12 -40 -10"></a-cylinder>
+      <a-cylinder position="-0.36 0.65  0.54" radius="0.028" height="2.1"
+                  color="#5c4a00" rotation="-12 -40  10"></a-cylinder>
+      <a-cylinder position=" 0.36 0.65  0.54" radius="0.028" height="2.1"
+                  color="#5c4a00" rotation="-12  40 -10"></a-cylinder>
 
       <!-- BONUS: Burner glow — pure A-Frame animation, no external deps -->
       <!-- BONUS: Burner glow (static — animations stripped to avoid anime.js crash) -->
@@ -503,7 +505,7 @@
 /* ================================================================
    CONSTANTS
 ================================================================ */
-const FWD_SPEED   = { 1: 0.055, 2: 0.085 };   // world-units / ~16ms tick
+const FWD_SPEED   = { 1: 0.11, 2: 0.17 };     // world-units / ~16ms tick (2× original)
 const MAX_TURN    = 1.6;    // deg added to heading per tick max
 const MAX_CLIMB   = 0.075;  // world-units/tick altitude change max
 const ALT_MIN     = 1.5;
@@ -975,17 +977,21 @@ AFRAME.registerComponent('game-tick', {
     const sens = SENS_VALUES[sensIdx];
 
     // ── Steering (heading turn) ───────────────────────────────────
+    // Negated: in A-Frame look-controls, rightward head turn decreases
+    // euler.y, so relYaw is negative when turning right. Subtract turnAmt
+    // so a rightward tilt correctly increases (clockwise) heading.
     if (Math.abs(relYaw) > DEADZONE) {
       const turnAmt = Math.sign(relYaw)
         * Math.min(Math.abs(relYaw) - DEADZONE, MAX_TURN * 10)
         / 10 * MAX_TURN * sens * dt;
-      bHeading += turnAmt;
+      bHeading -= turnAmt;
     }
 
     // ── Altitude ─────────────────────────────────────────────────
+    // Negated: looking up gives negative euler.x in device-orientation
+    // space; remove the leading minus so up → positive climb.
     if (Math.abs(worldPitch) > DEADZONE) {
-      // Pitch up (negative euler.x) = ascend
-      const climbAmt = -Math.sign(worldPitch)
+      const climbAmt = Math.sign(worldPitch)
         * Math.min((Math.abs(worldPitch) - DEADZONE) / 30, 1)
         * MAX_CLIMB * sens * dt;
       bPos.y = Math.max(ALT_MIN, Math.min(ALT_MAX, bPos.y + climbAmt));
