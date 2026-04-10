@@ -89,21 +89,21 @@
              • Poly Haven  : polyhaven.com/textures  (CC0)
              • ambientCG   : ambientcg.com           (CC0)
       -->
-      <!-- <img id="tex-balloon"    src="assets/textures/balloon.png">   -->
-      <!-- <img id="tex-basket"     src="assets/textures/basket.jpg">    -->
-      <!-- <img id="tex-ring"       src="assets/textures/ring.png">      -->
-      <!-- <img id="tex-orb"        src="assets/textures/orb.png">       -->
-      <!-- <img id="tex-cloud"      src="assets/textures/cloud.png">     -->
-      <!-- <img id="tex-ground-l1"  src="assets/textures/ground-meadow.jpg" repeat="40 40"> -->
-      <!-- <img id="tex-ground-l2"  src="assets/textures/ground-canyon.jpg" repeat="40 40"> -->
-      <!-- <img id="tex-sky-l1"     src="assets/textures/sky-day.jpg">   -->
-      <!-- <img id="tex-sky-l2"     src="assets/textures/sky-dusk.jpg">  -->
+      <img id="tex-balloon"   src="assets/textures/balloon.png">
+      <img id="tex-basket"    src="assets/textures/basket.jpg">
+      <img id="tex-ring"      src="assets/textures/ring.png">
+      <img id="tex-orb"       src="assets/textures/orb.png">
+      <img id="tex-cloud"     src="assets/textures/cloud.png">
+      <img id="tex-ground-l1" src="assets/textures/ground-meadow.jpg">
+      <img id="tex-ground-l2" src="assets/textures/ground-canyon.jpg">
+      <img id="tex-sky-l1"    src="assets/textures/sky-day.jpg">
+      <img id="tex-sky-l2"    src="assets/textures/sky-dusk.jpg">
     </a-assets>
 
     <!-- ==========================================================
          SKY  (single element — color swapped on level change)
     ========================================================== -->
-    <a-sky id="sky" color="#87CEEB"></a-sky>
+    <a-sky id="sky" src="#tex-sky-l1"></a-sky>
 
     <!-- ==========================================================
          LEVEL 1 ENVIRONMENT — Sunny Meadows
@@ -117,10 +117,8 @@
       <a-plane id="ground-l1"
                position="0 0 -300" rotation="-90 0 0"
                width="400" height="700"
-               color="#5c9e3f"
                shadow="receive: true"
-               repeat="40 80">
-        <!-- To add texture: material="src: #tex-ground-l1; repeat: 40 80" -->
+               material="src: #tex-ground-l1; repeat: 40 80; roughness: 1.0">
       </a-plane>
       <!-- Sun disc -->
       <a-sphere position="90 130 -250" radius="9"
@@ -144,9 +142,8 @@
       <a-plane id="ground-l2"
                position="0 0 -330" rotation="-90 0 0"
                width="400" height="750"
-               color="#7a3a1a"
-               shadow="receive: true">
-        <!-- To add texture: material="src: #tex-ground-l2; repeat: 40 80" -->
+               shadow="receive: true"
+               material="src: #tex-ground-l2; repeat: 40 80; roughness: 1.0">
       </a-plane>
       <!-- Canyon left wall -->
       <a-box position="-75 25 -330" width="30" height="55" depth="760"
@@ -204,9 +201,8 @@
       <!-- Envelope — overhead and slightly behind, clear of forward FOV -->
       <a-sphere id="balloon-envelope"
                 position="0 3.5 0.2" radius="1.35"
-                color="#E84040"
                 shadow="cast: true; receive: false"
-                material="roughness: 0.55; metalness: 0.08">
+                material="src: #tex-balloon; roughness: 0.55; metalness: 0.08">
         <a-cylinder position="0 0 0" radius="0.08" height="2.7"
                     material="shader: flat; color: #FFD700" rotation="0 0 0"></a-cylinder>
         <a-cylinder position="0 0 0" radius="0.08" height="2.7"
@@ -221,9 +217,8 @@
       <a-box id="balloon-basket"
              position="0 -0.9 0" scale="0.5 0.5 0.5"
              width="0.9" height="0.65" depth="0.9"
-             color="#8B6914"
              shadow="cast: true; receive: false"
-             material="roughness: 1.0; metalness: 0.0">
+             material="src: #tex-basket; roughness: 1.0; metalness: 0.0">
       </a-box>
 
       <!--
@@ -571,7 +566,7 @@ const LEVEL_CFG = {
 };
 
 const LEVEL_NAMES = { 1: 'Sunny Meadows', 2: 'Sunset Canyon' };
-const LEVEL_SKY   = { 1: '#87CEEB',       2: '#c05015'       };
+const LEVEL_SKY   = { 1: '#tex-sky-l1',   2: '#tex-sky-l2'   };
 
 /* ================================================================
    STATE
@@ -726,8 +721,7 @@ function makeRing(x, y, z, color) {
   el.setAttribute('radius', '3.5');
   el.setAttribute('radius-tubular', '0.28');
   el.setAttribute('rotation', `${rnd(-12,12)} ${rnd(-18,18)} 0`);
-  el.setAttribute('color', color);
-  el.setAttribute('material', `emissive: ${color}; emissiveIntensity: 0.35; roughness: 0.3`);
+  el.setAttribute('material', `src: #tex-ring; emissive: ${color}; emissiveIntensity: 0.35; roughness: 0.3`);
   return el;
 }
 
@@ -735,8 +729,7 @@ function makeOrb(x, y, z, color) {
   const el = document.createElement('a-sphere');
   el.setAttribute('position', `${x} ${y} ${z}`);
   el.setAttribute('radius', '0.68');
-  el.setAttribute('color', color);
-  el.setAttribute('material', `emissive: ${color}; emissiveIntensity: 0.85; roughness: 0.15`);
+  el.setAttribute('material', `src: #tex-orb; emissive: ${color}; emissiveIntensity: 0.85; roughness: 0.15`);
   return el;
 }
 
@@ -749,8 +742,11 @@ function makeCloud(x, y, z, color) {
       const s = document.createElement('a-sphere');
       s.setAttribute('position', `${cx} ${cy} ${cz}`);
       s.setAttribute('radius', `${cr}`);
-      s.setAttribute('color', color);
-      s.setAttribute('material', 'opacity: 0.85; transparent: true; roughness: 1.0');
+      // src: black-bg cloud map; alphaTest cuts hard black edges,
+      // blending: additive softens any remaining dark fringe.
+      s.setAttribute('material',
+        `src: #tex-cloud; color: ${color};` +
+        ' alphaTest: 0.5; blending: additive; transparent: true; roughness: 1.0; depthWrite: false');
       grp.appendChild(s);
     }
   );
@@ -827,7 +823,7 @@ function startLevel(lvl) {
   balloonEl.setAttribute('rotation', '0 0 0');
 
   // Swap environment
-  skyEl.setAttribute('color', LEVEL_SKY[lvl]);
+  skyEl.setAttribute('src', LEVEL_SKY[lvl]);
   envL1.setAttribute('visible', lvl === 1 ? 'true' : 'false');
   envL2.setAttribute('visible', lvl === 2 ? 'true' : 'false');
 
