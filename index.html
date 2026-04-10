@@ -182,9 +182,28 @@
                                    Visible in peripheral left/right/back views only.
       -->
 
-      <!-- Envelope — y:+2.5 puts bottom edge ~1.15 m above camera (overhead, out of FOV) -->
+      <!--
+        BALLOON GEOMETRY LAYOUT (positions relative to entity origin = camera eye)
+        ──────────────────────────────────────────────────────────────────────────
+        Camera looks in -Z. FOV ~80° → ±40° vertical, ±56° horizontal.
+
+        Envelope  y=+3.5, z=+0.2  → sits overhead AND slightly BEHIND camera.
+                                     Bottom edge at y≈+2.15 (above ±40° FOV).
+                                     z=+0.2 pushes it into +Z (behind), well
+                                     outside the forward -Z cone.
+
+        Basket    y=-0.9, z=0, scale 0.5  → small, low; rim at y≈-0.575.
+                                             Only visible on intentional downward look.
+
+        Ropes     spread wide in X, offset to z≥+0.3 → peripheral sides/back only.
+                  Angled outward so they never cross the forward -Z axis.
+
+        Burner    y=-0.55 → below basket bottom, glows upward into basket gap.
+      -->
+
+      <!-- Envelope — overhead and slightly behind, clear of forward FOV -->
       <a-sphere id="balloon-envelope"
-                position="0 2.5 0" radius="1.35"
+                position="0 3.5 0.2" radius="1.35"
                 color="#E84040"
                 shadow="cast: true; receive: false"
                 material="roughness: 0.55; metalness: 0.08">
@@ -198,43 +217,42 @@
                     material="shader: flat; color: #fff" rotation="0 135 0"></a-cylinder>
       </a-sphere>
 
-      <!-- Basket — y:-0.7 puts rim just below eye, only visible looking down -->
+      <!-- Basket — small and low, only visible looking down -->
       <a-box id="balloon-basket"
-             position="0 -0.7 0" width="0.9" height="0.65" depth="0.9"
+             position="0 -0.9 0" scale="0.5 0.5 0.5"
+             width="0.9" height="0.65" depth="0.9"
              color="#8B6914"
              shadow="cast: true; receive: false"
              material="roughness: 1.0; metalness: 0.0">
       </a-box>
 
       <!--
-        Suspension ropes — all z ≥ 0 so they sit beside/behind the camera.
-        Span from basket-top corners (y≈-0.475) up to envelope base (y≈2.65).
-        Height 3.4 covers that 3.13 m gap with slight angle margin.
-        Centres at y=1.1 (midpoint), slight inward Z-tilt to converge at envelope.
-        Radius 0.025 — thin enough to be unobtrusive in peripheral view.
+        Suspension ropes — wide X spread, all z ≥ +0.3 (behind camera).
+        Angled outward in X so they stay in far peripheral / back view.
+        Radius 0.02 — very thin.
       -->
-      <!-- Left side rope -->
-      <a-cylinder position="-0.5 1.1  0.0" radius="0.025" height="3.4"
-                  color="#5c4a00" rotation="0 0  4"></a-cylinder>
-      <!-- Right side rope -->
-      <a-cylinder position=" 0.5 1.1  0.0" radius="0.025" height="3.4"
-                  color="#5c4a00" rotation="0 0 -4"></a-cylinder>
+      <!-- Left rope -->
+      <a-cylinder position="-0.7 1.3  0.3" radius="0.02" height="3.8"
+                  color="#5c4a00" rotation="0 0  8"></a-cylinder>
+      <!-- Right rope -->
+      <a-cylinder position=" 0.7 1.3  0.3" radius="0.02" height="3.8"
+                  color="#5c4a00" rotation="0 0 -8"></a-cylinder>
       <!-- Back-left rope -->
-      <a-cylinder position="-0.4 1.1  0.5" radius="0.025" height="3.4"
-                  color="#5c4a00" rotation="-3 0  3"></a-cylinder>
+      <a-cylinder position="-0.5 1.3  0.7" radius="0.02" height="3.8"
+                  color="#5c4a00" rotation="-6 0  5"></a-cylinder>
       <!-- Back-right rope -->
-      <a-cylinder position=" 0.4 1.1  0.5" radius="0.025" height="3.4"
-                  color="#5c4a00" rotation="-3 0 -3"></a-cylinder>
+      <a-cylinder position=" 0.5 1.3  0.7" radius="0.02" height="3.8"
+                  color="#5c4a00" rotation="-6 0 -5"></a-cylinder>
 
-      <!-- Burner glow — just above basket, fully below camera eye -->
+      <!-- Burner glow — below basket, glows upward -->
       <a-sphere id="balloon-burner"
-                position="0 -0.45 0"
-                radius="0.15"
+                position="0 -0.55 0"
+                radius="0.12"
                 material="color: #ff6600; emissive: #ff4400; emissiveIntensity: 1.0;
                           opacity: 0.85; transparent: true; shader: flat">
       </a-sphere>
-      <a-sphere position="0 -0.45 0"
-                radius="0.28"
+      <a-sphere position="0 -0.55 0"
+                radius="0.22"
                 material="color: #ff9900; emissive: #ff6600; emissiveIntensity: 0.6;
                           opacity: 0.25; transparent: true; shader: flat">
       </a-sphere>
@@ -528,12 +546,22 @@
 /* ================================================================
    CONSTANTS
 ================================================================ */
-const FWD_SPEED   = { 1: 0.11, 2: 0.17 };     // world-units / ~16ms tick (2× original)
-const MAX_TURN    = 1.6;    // deg added to heading per tick max
-const MAX_CLIMB   = 0.075;  // world-units/tick altitude change max
+// ── Speed tuning ──────────────────────────────────────────────────────────
+// Increase to fly faster; decrease to slow down.  Units: world-m per ~16 ms tick.
+const FWD_SPEED   = { 1: 0.11, 2: 0.17 };   // L1 = 0.11, L2 = 0.17
+
+// ── Control tuning ────────────────────────────────────────────────────────
+const MAX_TURN    = 1.6;    // max deg/tick heading change
+const MAX_CLIMB   = 0.075;  // max world-units/tick altitude change
 const ALT_MIN     = 1.5;
 const ALT_MAX     = 38;
-const DEADZONE    = 7;      // degrees of head-tilt to ignore
+const DEADZONE    = 7;      // head-tilt degrees to ignore (dead centre)
+const PITCH_CLAMP = 45;     // clamp mouse/head pitch to ±45° to prevent flip
+
+// ── Control sign overrides ────────────────────────────────────────────────
+// Flip either constant to -1 if the axis is inverted on your device.
+const STEER_SIGN  =  1;     // +1 = tilt-right turns right; -1 = invert
+const PITCH_SIGN  =  1;     // +1 = look-up climbs;         -1 = invert
 
 const RING_SCORE  = 10;
 const ORB_SCORE   = 5;
@@ -993,24 +1021,29 @@ AFRAME.registerComponent('game-tick', {
     // cameraEl.object3D.rotation is local — it reflects only head tilt,
     // not the balloon's travel direction.
     const localYaw   = THREE.MathUtils.radToDeg(cameraEl.object3D.rotation.y);
-    const localPitch = THREE.MathUtils.radToDeg(cameraEl.object3D.rotation.x);
+    // Clamp pitch to ±PITCH_CLAMP to prevent camera flip on far mouse drag
+    const localPitch = Math.max(-PITCH_CLAMP,
+                         Math.min( PITCH_CLAMP,
+                           THREE.MathUtils.radToDeg(cameraEl.object3D.rotation.x)));
 
     const sens = SENS_VALUES[sensIdx];
 
     // ── Steering (heading turn) ───────────────────────────────────
     // Head centered → straight; hold tilt → constant turn rate;
     // return to center → stop turning.
+    // Flip STEER_SIGN to -1 in constants if left/right is inverted.
     if (Math.abs(localYaw) > DEADZONE) {
-      const turnRate = Math.sign(localYaw)
+      const turnRate = STEER_SIGN * Math.sign(localYaw)
         * Math.min(Math.abs(localYaw) - DEADZONE, 30) / 30
         * MAX_TURN * sens * dt;
       bHeading += turnRate;
     }
 
     // ── Altitude ─────────────────────────────────────────────────
-    // Look up (negative local pitch in A-Frame) → climb.
+    // In A-Frame look-controls, looking up gives a positive local pitch.
+    // Flip PITCH_SIGN to -1 in constants if up/down is inverted.
     if (Math.abs(localPitch) > DEADZONE) {
-      const climbAmt = -Math.sign(localPitch)
+      const climbAmt = PITCH_SIGN * Math.sign(localPitch)
         * Math.min((Math.abs(localPitch) - DEADZONE) / 30, 1)
         * MAX_CLIMB * sens * dt;
       bPos.y = Math.max(ALT_MIN, Math.min(ALT_MAX, bPos.y + climbAmt));
