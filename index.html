@@ -347,8 +347,8 @@
          Level-up + game-over: repositioned by placeWorldPanel()
          in JS so they appear in front of the balloon mid-flight.
 
-         Panel rotation Y = -bHeading so the front face (+Z normal)
-         always points back toward the camera.
+         Panel rotation Y computed from camera forward vector so the
+         front face (+Z normal) always points back toward the camera.
     ========================================================== -->
 
     <!-- ① FLASH SCREEN  (auto-advances after 5 s) -->
@@ -551,17 +551,9 @@
 const FWD_SPEED   = { 1: 0.11, 2: 0.17 };   // L1 = 0.11, L2 = 0.17
 
 // ── Control tuning ────────────────────────────────────────────────────────
-const MAX_TURN    = 1.6;    // max deg/tick heading change
 const MAX_CLIMB   = 0.075;  // max world-units/tick altitude change
 const ALT_MIN     = 1.5;
 const ALT_MAX     = 38;
-const DEADZONE    = 7;      // head-tilt degrees to ignore (dead centre)
-const PITCH_CLAMP = 45;     // clamp mouse/head pitch to ±45° to prevent flip
-
-// ── Control sign overrides ────────────────────────────────────────────────
-// Flip either constant to -1 if the axis is inverted on your device.
-const STEER_SIGN  =  1;     // +1 = tilt-right turns right; -1 = invert
-const PITCH_SIGN  =  1;     // +1 = look-up climbs;         -1 = invert
 
 const RING_SCORE  = 10;
 const ORB_SCORE   = 5;
@@ -591,9 +583,8 @@ let sensIdx      = 2;
 let musicMuted   = false;
 let highScore    = parseInt(localStorage.getItem('skyDrifterHigh') || '0', 10);
 
-// Balloon world-space position & heading
+// Balloon world-space position
 const bPos = { x: 0, y: 5, z: 0 };
-let bHeading = 0;   // degrees, world Y
 
 // Active objects: {el, x, y, z, used, penalized}
 let rings  = [];
@@ -700,7 +691,7 @@ function startSetup() {
   gameState = 'setup';
   stopAllMusic();
   // Reset balloon to spawn so the world-space setup panel at (0 5 -2.6) is in front
-  bPos.x = 0; bPos.y = 5; bPos.z = 0; bHeading = 0;
+  bPos.x = 0; bPos.y = 5; bPos.z = 0;
   rigEl.object3D.position.set(0, 5, 0);
   balloonEl.object3D.position.set(0, 5, 0);
   showScreens(sSetup);
@@ -829,7 +820,7 @@ function startLevel(lvl) {
   gameState = 'playing';
 
   // Reset balloon to start position
-  bPos.x = 0; bPos.y = 5; bPos.z = 0; bHeading = 0;
+  bPos.x = 0; bPos.y = 5; bPos.z = 0;
   const posStr = '0 5 0';
   rigEl.setAttribute('position', posStr);
   balloonEl.setAttribute('position', posStr);
@@ -864,12 +855,19 @@ let luTimer = null;
 // position, rotated so its front face (+Z normal) points back at the camera.
 // Called for level-up and game-over panels that appear mid-flight.
 function placeWorldPanel(el) {
-  const headRad = bHeading * Math.PI / 180;
-  const px = bPos.x + Math.sin(headRad) * 2.6;
+  // Place panel 2.6 m in front of where the camera is currently looking (XZ only)
+  const q = new THREE.Quaternion();
+  cameraEl.object3D.getWorldQuaternion(q);
+  const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(q);
+  fwd.y = 0;
+  if (fwd.lengthSq() > 0.0001) fwd.normalize();
+  const px = bPos.x + fwd.x * 2.6;
   const py = bPos.y;
-  const pz = bPos.z - Math.cos(headRad) * 2.6;
+  const pz = bPos.z + fwd.z * 2.6;
   el.setAttribute('position', `${px.toFixed(2)} ${py.toFixed(2)} ${pz.toFixed(2)}`);
-  el.setAttribute('rotation', `0 ${(-bHeading).toFixed(1)} 0`);
+  // Rotate panel to face back toward camera
+  const yDeg = THREE.MathUtils.radToDeg(Math.atan2(-fwd.x, -fwd.z));
+  el.setAttribute('rotation', `0 ${yDeg.toFixed(1)} 0`);
 }
 
 function levelComplete() {
@@ -1011,55 +1009,35 @@ AFRAME.registerComponent('game-tick', {
     // Clamp delta to avoid huge jumps after tab-switching
     const dt = Math.min(delta / 16.67, 3.0);
 
-    // ── Sync rig rotation to balloon heading first ────────────────
-    // This makes the camera's LOCAL rotation = pure player head input,
-    // eliminating the world-yaw feedback loop.
-    const headRad = THREE.MathUtils.degToRad(bHeading);
-    rigEl.object3D.rotation.set(0, headRad, 0);
+    // ── Get camera world forward vector ──────────────────────────
+    const camWorldQuat = new THREE.Quaternion();
+    cameraEl.object3D.getWorldQuaternion(camWorldQuat);
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camWorldQuat);
 
-    // ── Read head orientation (local to rig) ─────────────────────
-    // cameraEl.object3D.rotation is local — it reflects only head tilt,
-    // not the balloon's travel direction.
-    const localYaw   = THREE.MathUtils.radToDeg(cameraEl.object3D.rotation.y);
-    // Clamp pitch to ±PITCH_CLAMP to prevent camera flip on far mouse drag
-    const localPitch = Math.max(-PITCH_CLAMP,
-                         Math.min( PITCH_CLAMP,
-                           THREE.MathUtils.radToDeg(cameraEl.object3D.rotation.x)));
-
-    const sens = SENS_VALUES[sensIdx];
-
-    // ── Steering (heading turn) ───────────────────────────────────
-    // Head centered → straight; hold tilt → constant turn rate;
-    // return to center → stop turning.
-    // Flip STEER_SIGN to -1 in constants if left/right is inverted.
-    if (Math.abs(localYaw) > DEADZONE) {
-      const turnRate = STEER_SIGN * Math.sign(localYaw)
-        * Math.min(Math.abs(localYaw) - DEADZONE, 30) / 30
-        * MAX_TURN * sens * dt;
-      bHeading += turnRate;
-    }
-
-    // ── Altitude ─────────────────────────────────────────────────
-    // In A-Frame look-controls, looking up gives a positive local pitch.
-    // Flip PITCH_SIGN to -1 in constants if up/down is inverted.
-    if (Math.abs(localPitch) > DEADZONE) {
-      const climbAmt = PITCH_SIGN * Math.sign(localPitch)
-        * Math.min((Math.abs(localPitch) - DEADZONE) / 30, 1)
-        * MAX_CLIMB * sens * dt;
-      bPos.y = Math.max(ALT_MIN, Math.min(ALT_MAX, bPos.y + climbAmt));
-    }
-
-    // ── Forward movement ─────────────────────────────────────────
+    // ── Forward movement (XZ plane only) ─────────────────────────
+    const flat = new THREE.Vector3(forward.x, 0, forward.z);
+    if (flat.lengthSq() > 0.0001) flat.normalize();
     const speed = FWD_SPEED[level] * dt;
-    bPos.x +=  Math.sin(headRad) * speed;
-    bPos.z += -Math.cos(headRad) * speed;
+    bPos.x += flat.x * speed;
+    bPos.z += flat.z * speed;
 
-    // ── Sync transforms ─────────────────────────────────────────
+    // ── Altitude from look pitch ──────────────────────────────────
+    // forward.y is +1 looking straight up, -1 straight down.
+    // Deadzone of 0.1 (~6°) prevents drift on flat look.
+    const pitch = forward.y;
+    if (Math.abs(pitch) > 0.1) {
+      const sens = SENS_VALUES[sensIdx];
+      bPos.y += (pitch - Math.sign(pitch) * 0.1) * MAX_CLIMB * sens * dt;
+      bPos.y = Math.max(ALT_MIN, Math.min(ALT_MAX, bPos.y));
+    }
+
+    // ── Sync transforms ──────────────────────────────────────────
     rigEl.object3D.position.set(bPos.x, bPos.y, bPos.z);
     balloonEl.object3D.position.set(bPos.x, bPos.y, bPos.z);
-    balloonEl.object3D.rotation.y = headRad;
+    // Orient balloon visual to match flat flight direction
+    balloonEl.object3D.rotation.y = Math.atan2(flat.x, -flat.z);
 
-    // Gentle idle sway on balloon envelope
+    // ── Gentle idle sway on envelope ─────────────────────────────
     const sway = Math.sin(time * 0.0009) * 1.2;
     const envelopeEl = document.getElementById('balloon-envelope');
     if (envelopeEl) envelopeEl.object3D.rotation.z = THREE.MathUtils.degToRad(sway);
@@ -1067,7 +1045,7 @@ AFRAME.registerComponent('game-tick', {
     // ── Collisions ───────────────────────────────────────────────
     checkCollisions();
 
-    // ── Level 2 completion (traveled past the whole depth) ───────
+    // ── Level 2 completion ───────────────────────────────────────
     if (level === 2 && -bPos.z > LEVEL_CFG[2].depth + 60) {
       gameOver();
     }
