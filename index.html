@@ -315,6 +315,12 @@
                   position="1.60 0.94 0.01"
                   align="right" color="#aaa" width="1.9">
           </a-text>
+          <!-- Boundary warning (centre, below top bar) -->
+          <a-text id="hud-boundary"
+                  value=""
+                  position="0 0.55 0.01"
+                  align="center" color="#ff9900" width="2.4">
+          </a-text>
         </a-entity>
 
         <!-- ════════════════════════════════════════════════════
@@ -550,6 +556,13 @@ const MAX_CLIMB   = 0.075;  // max world-units/tick altitude change
 const ALT_MIN     = 1.5;
 const ALT_MAX     = 38;
 
+// ── World boundary constants ──────────────────────────────────────────────
+// X/Z limits keep the player inside the playfield and the sky sphere.
+// WORLD_Z_MIN is computed per-level in the tick: -(depth + 100).
+const WORLD_X_MIN = -150;
+const WORLD_X_MAX =  150;
+const WORLD_Z_MAX =   50;   // can't fly backward past spawn point
+
 const RING_SCORE  = 10;
 const ORB_SCORE   = 5;
 const CLOUD_PEN   = 15;
@@ -580,6 +593,7 @@ let highScore    = parseInt(localStorage.getItem('skyDrifterHigh') || '0', 10);
 
 // Balloon world-space position
 const bPos = { x: 0, y: 5, z: 0 };
+let boundaryNudge = 0;   // frames remaining to nudge balloon back from world edge
 
 // Active objects: {el, x, y, z, used, penalized}
 let rings  = [];
@@ -617,6 +631,7 @@ const lblHighscore  = document.getElementById('lbl-highscore');
 const hudScoreEl    = document.getElementById('hud-score');
 const hudLevelEl    = document.getElementById('hud-level');
 const hudBestEl     = document.getElementById('hud-best');
+const hudBoundaryEl = document.getElementById('hud-boundary');
 const luScoreEl     = document.getElementById('lu-score');
 const luCountEl     = document.getElementById('lu-countdown');
 const goScoreEl     = document.getElementById('go-score');
@@ -1027,11 +1042,36 @@ AFRAME.registerComponent('game-tick', {
       bPos.y = Math.max(ALT_MIN, Math.min(ALT_MAX, bPos.y));
     }
 
+    // ── World boundary clamping ───────────────────────────────────
+    const WORLD_Z_MIN = -(LEVEL_CFG[level].depth + 100);
+    let hitBoundary = false;
+    if (bPos.x < WORLD_X_MIN) { bPos.x = WORLD_X_MIN; hitBoundary = true; }
+    if (bPos.x > WORLD_X_MAX) { bPos.x = WORLD_X_MAX; hitBoundary = true; }
+    if (bPos.z > WORLD_Z_MAX) { bPos.z = WORLD_Z_MAX; hitBoundary = true; }
+    if (bPos.z < WORLD_Z_MIN) { bPos.z = WORLD_Z_MIN; hitBoundary = true; }
+
+    if (hitBoundary) {
+      boundaryNudge = 90;   // ~1.5 s at 60 fps
+      hudBoundaryEl.setAttribute('text', 'value', 'Turning back…');
+    }
+    if (boundaryNudge > 0) {
+      // Gently pull X toward centre, Z toward mid-level depth
+      bPos.x += (0 - bPos.x) * 0.018;
+      bPos.z += (-(LEVEL_CFG[level].depth * 0.5) - bPos.z) * 0.008;
+      boundaryNudge--;
+      if (boundaryNudge === 0) {
+        hudBoundaryEl.setAttribute('text', 'value', '');
+      }
+    }
+
     // ── Sync transforms ──────────────────────────────────────────
     rigEl.object3D.position.set(bPos.x, bPos.y, bPos.z);
     balloonEl.object3D.position.set(bPos.x, bPos.y, bPos.z);
     // Orient balloon visual to match flat flight direction
     balloonEl.object3D.rotation.y = Math.atan2(flat.x, -flat.z);
+
+    // ── Sky follows camera so player never reaches the sphere edge ─
+    skyEl.object3D.position.set(bPos.x, bPos.y, bPos.z);
 
     // ── Gentle idle sway on envelope ─────────────────────────────
     const sway = Math.sin(time * 0.0009) * 1.2;
@@ -1041,7 +1081,12 @@ AFRAME.registerComponent('game-tick', {
     // ── Collisions ───────────────────────────────────────────────
     checkCollisions();
 
-    // ── Level 2 completion ───────────────────────────────────────
+    // ── Level completion ─────────────────────────────────────────
+    // L1: flying past depth triggers level-up to L2
+    if (level === 1 && -bPos.z > LEVEL_CFG[1].depth + 60) {
+      levelComplete();
+    }
+    // L2: flying past depth ends the game
     if (level === 2 && -bPos.z > LEVEL_CFG[2].depth + 60) {
       gameOver();
     }
