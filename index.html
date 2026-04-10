@@ -165,14 +165,29 @@
     ========================================================== -->
     <a-entity id="balloon-entity" position="0 5 0">
 
-      <!-- Envelope (sphere) — y:+2 keeps bottom edge 0.65 m above camera;
-           z:+0.3 shifts it behind the player so the forward view is clear -->
+      <!--
+        BALLOON GEOMETRY LAYOUT (all positions relative to entity origin = camera eye)
+        ─────────────────────────────────────────────────────────────────────────────
+        Camera looks in  -Z  (forward).  FOV = 80° → ±40° vertical, ~±56° horizontal.
+
+        Envelope  y=+4.0, z=0   → bottom edge at y=+2.65, directly overhead.
+                                   Angle from -Z forward = 90°. Never in ±40° FOV.
+                                   Player must look straight up to see it.
+
+        Basket    y=-0.8, z=0   → top edge at y=-0.475, directly below.
+                                   Angle from -Z forward = 90°. Never in ±40° FOV.
+                                   Player glances down to see basket rim.
+
+        Ropes     all at z ≥ 0  → behind or level with camera, never in forward view.
+                                   Visible in peripheral left/right/back views only.
+      -->
+
+      <!-- Envelope — y:+4.0 puts bottom edge 2.65 m above camera (overhead only) -->
       <a-sphere id="balloon-envelope"
-                position="0 2.0 0.3" radius="1.35"
+                position="0 4.0 0" radius="1.35"
                 color="#E84040"
                 shadow="cast: true; receive: false"
                 material="roughness: 0.55; metalness: 0.08">
-        <!-- Vertical stripe overlay (flat-shader so it glows a bit) -->
         <a-cylinder position="0 0 0" radius="0.08" height="2.7"
                     material="shader: flat; color: #FFD700" rotation="0 0 0"></a-cylinder>
         <a-cylinder position="0 0 0" radius="0.08" height="2.7"
@@ -183,39 +198,47 @@
                     material="shader: flat; color: #fff" rotation="0 135 0"></a-cylinder>
       </a-sphere>
 
-      <!-- Basket (wicker box) -->
+      <!-- Basket — y:-0.8 puts rim just below eye, only visible looking down -->
       <a-box id="balloon-basket"
-             position="0 -0.6 0" width="0.9" height="0.65" depth="0.9"
+             position="0 -0.8 0" width="0.9" height="0.65" depth="0.9"
              color="#8B6914"
              shadow="cast: true; receive: false"
              material="roughness: 1.0; metalness: 0.0">
       </a-box>
 
-      <!-- Suspension ropes — centres raised and lengthened to reach
-           the envelope now at y:+2 z:+0.3 from the entity origin -->
-      <a-cylinder position="-0.36 0.65 -0.18" radius="0.028" height="2.1"
-                  color="#5c4a00" rotation=" 12  40  10"></a-cylinder>
-      <a-cylinder position=" 0.36 0.65 -0.18" radius="0.028" height="2.1"
-                  color="#5c4a00" rotation=" 12 -40 -10"></a-cylinder>
-      <a-cylinder position="-0.36 0.65  0.54" radius="0.028" height="2.1"
-                  color="#5c4a00" rotation="-12 -40  10"></a-cylinder>
-      <a-cylinder position=" 0.36 0.65  0.54" radius="0.028" height="2.1"
-                  color="#5c4a00" rotation="-12  40 -10"></a-cylinder>
+      <!--
+        Suspension ropes — all z ≥ 0 so they sit beside/behind the camera.
+        Span from basket-top corners (y≈-0.475) up to envelope base (y≈2.65).
+        Height 3.4 covers that 3.13 m gap with slight angle margin.
+        Centres at y=1.1 (midpoint), slight inward Z-tilt to converge at envelope.
+        Radius 0.025 — thin enough to be unobtrusive in peripheral view.
+      -->
+      <!-- Left side rope -->
+      <a-cylinder position="-0.5 1.1  0.0" radius="0.025" height="3.4"
+                  color="#5c4a00" rotation="0 0  4"></a-cylinder>
+      <!-- Right side rope -->
+      <a-cylinder position=" 0.5 1.1  0.0" radius="0.025" height="3.4"
+                  color="#5c4a00" rotation="0 0 -4"></a-cylinder>
+      <!-- Back-left rope -->
+      <a-cylinder position="-0.4 1.1  0.5" radius="0.025" height="3.4"
+                  color="#5c4a00" rotation="-3 0  3"></a-cylinder>
+      <!-- Back-right rope -->
+      <a-cylinder position=" 0.4 1.1  0.5" radius="0.025" height="3.4"
+                  color="#5c4a00" rotation="-3 0 -3"></a-cylinder>
 
-      <!-- BONUS: Burner glow — pure A-Frame animation, no external deps -->
-      <!-- BONUS: Burner glow (static — animations stripped to avoid anime.js crash) -->
+      <!-- Burner glow — just above basket, fully below camera eye -->
       <a-sphere id="balloon-burner"
-                position="0 -0.28 0"
+                position="0 -0.45 0"
                 radius="0.15"
                 material="color: #ff6600; emissive: #ff4400; emissiveIntensity: 1.0;
                           opacity: 0.85; transparent: true; shader: flat">
       </a-sphere>
-      <!-- Outer halo: soft glow rim -->
-      <a-sphere position="0 -0.28 0"
+      <a-sphere position="0 -0.45 0"
                 radius="0.28"
                 material="color: #ff9900; emissive: #ff6600; emissiveIntensity: 0.6;
                           opacity: 0.25; transparent: true; shader: flat">
       </a-sphere>
+
     </a-entity>
 
     <!-- ==========================================================
