@@ -392,76 +392,108 @@
 
     <!-- ② SETUP SCREEN -->
     <a-entity id="screen-setup" visible="false" position="0 5 -2.6">
-      <a-plane width="3.6" height="3.0"
+      <!--
+        RAYCAST FIX: background panel pushed to z:-0.15 so it is well
+        behind all button planes (z:0.02). Text labels are siblings of
+        their buttons (NOT children) so they are never part of the
+        .menu-btn descendant tree that the raycaster scans.
+      -->
+      <a-plane width="3.8" height="3.2"
+               position="0 0 -0.15"
                material="shader: flat; color: #000818; opacity: 0.97; transparent: true">
       </a-plane>
+
+      <!-- Title -->
       <a-text value="SETTINGS"
               position="0 1.12 0.02"
               align="center" color="#FFD700" width="3.2" font="kelsonsans">
       </a-text>
+
+      <!-- MUSIC label -->
       <a-text value="MUSIC"
               position="0 0.78 0.02"
               align="center" color="#aaddff" width="2.0">
       </a-text>
+      <!-- Mute button — enlarged hit plane, NO child text -->
       <a-plane id="btn-mute"
                class="menu-btn"
                position="0 0.50 0.02"
-               width="1.9" height="0.40"
+               width="2.4" height="0.55"
                material="shader: flat; color: #1a3a6c; opacity: 1">
-        <a-text id="lbl-mute"
-                value="ON" position="0 0 0.01"
-                align="center" color="#44ff88" width="2.2">
-        </a-text>
       </a-plane>
+      <!-- Mute label — sibling at z:0.06, clear of button hit plane -->
+      <a-text id="lbl-mute"
+              value="ON"
+              position="0 0.50 0.06"
+              align="center" color="#44ff88" width="2.2">
+      </a-text>
+
+      <!-- SENSITIVITY label -->
       <a-text value="SENSITIVITY"
               position="0 0.08 0.02"
               align="center" color="#aaddff" width="2.0">
       </a-text>
+      <!-- Sens-dec button -->
       <a-plane id="btn-sens-dec"
                class="menu-btn"
                position="-0.78 -0.22 0.02"
-               width="0.55" height="0.40"
+               width="0.75" height="0.60"
                material="shader: flat; color: #1a3a6c">
-        <a-text value="◀" position="0 0 0.01" align="center" color="#fff" width="0.8"></a-text>
       </a-plane>
+      <a-text value="◀"
+              position="-0.78 -0.22 0.06"
+              align="center" color="#fff" width="0.9">
+      </a-text>
+      <!-- Sensitivity label (centre, between the two arrows) -->
       <a-text id="lbl-sens"
               value="Medium"
               position="0 -0.22 0.02"
               align="center" color="#FFD700" width="1.5">
       </a-text>
+      <!-- Sens-inc button -->
       <a-plane id="btn-sens-inc"
                class="menu-btn"
                position="0.78 -0.22 0.02"
-               width="0.55" height="0.40"
+               width="0.75" height="0.60"
                material="shader: flat; color: #1a3a6c">
-        <a-text value="▶" position="0 0 0.01" align="center" color="#fff" width="0.8"></a-text>
       </a-plane>
+      <a-text value="▶"
+              position="0.78 -0.22 0.06"
+              align="center" color="#fff" width="0.9">
+      </a-text>
+
+      <!-- Controls hint -->
       <a-text value="Tilt head left / right to steer&#xA;Look up / down to change altitude"
-              position="0 -0.58 0.02"
+              position="0 -0.62 0.02"
               align="center" color="#667" width="2.9">
       </a-text>
       <a-text id="lbl-highscore"
               value="Best Score: 0"
-              position="0 -0.86 0.02"
+              position="0 -0.92 0.02"
               align="center" color="#888" width="2.5">
       </a-text>
+
+      <!-- START GAME button — large hit plane, NO child text -->
       <a-plane id="btn-start"
                class="menu-btn"
-               position="0 -1.19 0.02"
-               width="2.3" height="0.48"
+               position="0 -1.24 0.02"
+               width="3.0" height="0.70"
                material="shader: flat; color: #1a7a1a">
-        <a-text value="START GAME" position="0 0 0.01"
-                align="center" color="#fff" width="2.8" font="kelsonsans">
-        </a-text>
       </a-plane>
+      <!-- START GAME label — sibling at z:0.06 -->
+      <a-text value="START GAME"
+              position="0 -1.24 0.06"
+              align="center" color="#fff" width="2.8" font="kelsonsans">
+      </a-text>
+
       <a-text value="Gaze at a button and hold 1.5 s to select"
-              position="0 -1.48 0.02"
+              position="0 -1.58 0.02"
               align="center" color="#444" width="2.9">
       </a-text>
       <!-- iOS motion-permission denial message (hidden until needed) -->
       <a-text id="ios-perm-msg"
               value=""
-              position="0 -1.72 0.02"
+              position="0 -1.82 0.02"
               align="center" color="#ff6644" width="2.9">
       </a-text>
     </a-entity>
@@ -493,7 +525,9 @@
 
     <!-- ④ GAME-COMPLETE OVERLAY (repositioned by placeWorldPanel in JS) -->
     <a-entity id="screen-gameover" visible="false" position="0 5 -2.6">
-      <a-plane width="3.6" height="3.2"
+      <!-- Background panel pushed to z:-0.15; button labels are siblings not children -->
+      <a-plane width="3.8" height="3.4"
+               position="0 0 -0.15"
                material="shader: flat; color: #000818; opacity: 0.97; transparent: true">
       </a-plane>
       <!-- Title — set dynamically by gameOver() -->
@@ -528,26 +562,30 @@
               position="0 -0.10 0.02"
               align="center" color="#44ff88" width="2.8" font="kelsonsans">
       </a-text>
+      <!-- PLAY AGAIN button — large hit plane, NO child text -->
       <a-plane id="btn-play-again"
                class="menu-btn"
                position="0 -0.58 0.02"
-               width="2.3" height="0.46"
+               width="3.0" height="0.70"
                material="shader: flat; color: #1a7a1a">
-        <a-text value="PLAY AGAIN" position="0 0 0.01"
-                align="center" color="#fff" width="2.8" font="kelsonsans">
-        </a-text>
       </a-plane>
+      <a-text value="PLAY AGAIN"
+              position="0 -0.58 0.06"
+              align="center" color="#fff" width="2.8" font="kelsonsans">
+      </a-text>
+      <!-- SETTINGS button — large hit plane, NO child text -->
       <a-plane id="btn-to-setup"
                class="menu-btn"
-               position="0 -1.14 0.02"
-               width="2.3" height="0.40"
+               position="0 -1.18 0.02"
+               width="3.0" height="0.55"
                material="shader: flat; color: #1a3a6c">
-        <a-text value="SETTINGS" position="0 0 0.01"
-                align="center" color="#aaa" width="2.2">
-        </a-text>
       </a-plane>
+      <a-text value="SETTINGS"
+              position="0 -1.18 0.06"
+              align="center" color="#aaa" width="2.2">
+      </a-text>
       <a-text value="Gaze at a button and hold 1.5 s to select"
-              position="0 -1.44 0.02"
+              position="0 -1.54 0.02"
               align="center" color="#444" width="2.9">
       </a-text>
     </a-entity>
