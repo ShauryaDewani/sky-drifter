@@ -333,7 +333,7 @@ sky-drifter/
     <li>
       <div>
         <strong>Create a GitHub repository</strong> (public).<br>
-        <code>https://github.com/&lt;your-username&gt;/sky-drifter</code>
+        <code>https://github.com/shauryadewani/sky-drifter</code>
       </div>
     </li>
     <li>
@@ -343,7 +343,7 @@ sky-drifter/
 git init
 git add .
 git commit -m "Initial Sky Drifter commit"
-git remote add origin https://github.com/&lt;your-username&gt;/sky-drifter.git
+git remote add origin https://github.com/shauryadewani/sky-drifter.git
 git push -u origin main
 </pre>
       </div>
@@ -359,7 +359,7 @@ git push -u origin main
     <li>
       <div>
         Wait ~1 minute. Your game will be live at:<br>
-        <code>https://&lt;your-username&gt;.github.io/sky-drifter/</code>
+        <code>https://shauryadewani.github.io/sky-drifter/</code>
       </div>
     </li>
     <li>
@@ -448,8 +448,8 @@ git push -u origin main
           <td>Balloon (sphere + box + ropes), rings (torus), orbs (sphere + emissive), clouds (multi-sphere), rock spires (cone-cylinder)</td></tr>
       <tr><td>Collision detection</td>
           <td>Distance + plane-crossing checks per tick: ring pass-through (+pts), orb capture (+pts), cloud overlap (−pts)</td></tr>
-      <tr><td><em>Bonus</em> — Particle trail</td>
-          <td>Two stacked <code>&lt;a-sphere&gt;</code> elements with A-Frame <code>animation__scale</code> and <code>animation__opacity</code> loops; <code>emissive</code> flat-shader for glow — no external library required</td></tr>
+      <tr><td><em>Bonus</em> — Game complete screen</td>
+          <td>World-space panel shown when Level 2 ends: animated title, final score, personal best, "NEW HIGH SCORE!" badge, and gaze-selectable Play Again / Settings buttons</td></tr>
       <tr><td><em>Bonus</em> — High score localStorage</td>
           <td><code>localStorage.getItem/setItem('skyDrifterHigh')</code> persists between sessions</td></tr>
     </tbody>
@@ -467,9 +467,9 @@ git push -u origin main
     <li><strong>CORS for assets:</strong> Textures and audio must be served from the
         same origin (or with correct CORS headers). Use a local server — never
         open <code>index.html</code> via <code>file://</code>.</li>
-    <li><strong>Burner glow:</strong> The flame effect uses only A-Frame's built-in
-        <code>animation</code> component — no external library is required and
-        no CDN dependency can break it.</li>
+    <li><strong>Burner glow:</strong> The flame effect uses two stacked emissive
+        <code>&lt;a-sphere&gt;</code> elements with a flat shader — no external
+        library or CDN dependency required.</li>
     <li><strong>Performance:</strong> Keep texture sizes ≤ 1024 × 1024 px for smooth
         60 fps on mid-range phones.</li>
   </ul>

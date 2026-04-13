@@ -10,7 +10,7 @@ collect orbs, and fly through rings across two hand-crafted levels.
 
 ## Play Online
 
-> 🔗 `https://<your-username>.github.io/sky-drifter/`
+> 🔗 `https://shauryadewani.github.io/sky-drifter/`
 
 Open in Chrome on your phone, tap the VR goggles icon, drop into a Cardboard headset.
 
@@ -88,11 +88,11 @@ Then open `http://localhost:8080`.
 git init
 git add .
 git commit -m "Initial Sky Drifter commit"
-git remote add origin https://github.com/<your-username>/sky-drifter.git
+git remote add origin https://github.com/shauryadewani/sky-drifter.git
 git push -u origin main
 
 # 3. In GitHub: Settings → Pages → Source: main / (root) → Save
-# 4. Live in ~1 min at https://<your-username>.github.io/sky-drifter/
+# 4. Live in ~1 min at https://shauryadewani.github.io/sky-drifter/
 ```
 
 ---
@@ -126,7 +126,7 @@ Recommended free CC0 sources: [Poly Haven](https://polyhaven.com/textures),
 - [x] Stereoscopic mobile VR (A-Frame WebXR / Cardboard)
 - [x] Custom geometry objects — balloon, basket, rings, orbs, clouds, spires
 - [x] Collision detection — ring pass-through, orb collect, cloud penalty
-- [x] **Bonus** — Particle burner flame trail behind balloon
+- [x] **Bonus** — Game complete screen with high score celebration on Level 2
 - [x] **Bonus** — High score persisted in `localStorage`
 
 ---
