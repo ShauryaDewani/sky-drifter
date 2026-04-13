@@ -725,9 +725,42 @@ function playSFX(id) {
 ================================================================ */
 const ALL_SCREENS = () => [sFlash, sSetup, sHUD, sLevelup, sGameover];
 
+/* ----------------------------------------------------------------
+   Button-class helpers
+   A-Frame's raycaster (objects: .menu-btn) skips any element whose
+   class is not exactly "menu-btn".  Inactive panels get their
+   buttons swapped to "menu-btn-inactive" so overlapping hidden
+   panels never intercept gaze rays.
+---------------------------------------------------------------- */
+function disablePanelButtons(panelEl) {
+  if (!panelEl) return;
+  panelEl.querySelectorAll('.menu-btn').forEach(el => {
+    el.classList.remove('menu-btn');
+    el.classList.add('menu-btn-inactive');
+  });
+}
+
+function enablePanelButtons(panelEl) {
+  if (!panelEl) return;
+  panelEl.querySelectorAll('.menu-btn-inactive').forEach(el => {
+    el.classList.remove('menu-btn-inactive');
+    el.classList.add('menu-btn');
+  });
+}
+
 function showScreens(...active) {
-  ALL_SCREENS().forEach(s => s && s.setAttribute('visible', 'false'));
-  active.forEach(s => s && s.setAttribute('visible', 'true'));
+  // Hide all panels and strip menu-btn from every button
+  ALL_SCREENS().forEach(s => {
+    if (!s) return;
+    s.setAttribute('visible', 'false');
+    disablePanelButtons(s);
+  });
+  // Show active panels and restore menu-btn so their buttons are raycastable
+  active.forEach(s => {
+    if (!s) return;
+    s.setAttribute('visible', 'true');
+    enablePanelButtons(s);
+  });
 }
 
 /* ================================================================
